@@ -218,6 +218,19 @@ public class ReflectionUtilsTest {
 		assert ReflectionUtils.getCallerClass() == clazz;
 	}
 
+	@Test
+	public void wrapClassTest() {
+		assert ReflectionUtils.wrapClass(boolean.class) == Boolean.class;
+		assert ReflectionUtils.wrapClass(byte.class) == Byte.class;
+		assert ReflectionUtils.wrapClass(short.class) == Short.class;
+		assert ReflectionUtils.wrapClass(int.class) == Integer.class;
+		assert ReflectionUtils.wrapClass(long.class) == Long.class;
+		assert ReflectionUtils.wrapClass(float.class) == Float.class;
+		assert ReflectionUtils.wrapClass(double.class) == Double.class;
+		assert ReflectionUtils.wrapClass(char.class) == Character.class;
+		assert ReflectionUtils.wrapClass(Object.class) == Object.class;
+	}
+
 	static record TestRecord(int a) {
 
 	}
