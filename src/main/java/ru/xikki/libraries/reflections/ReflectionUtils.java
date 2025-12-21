@@ -1002,12 +1002,9 @@ public class ReflectionUtils {
 	 * @return List of loaded classes
 	 */
 	@NonNull
+	@SneakyThrows
 	public List<Class<?>> getLoadedClasses(@NonNull ClassLoader loader) {
-		try {
-			return (List<Class<?>>) CLASSES_FIELD.get(loader);
-		} catch (IllegalAccessException e) {
-			throw new RuntimeException(e);
-		}
+		return (List<Class<?>>) CLASSES_FIELD.get(loader);
 	}
 
 	/**
