@@ -232,6 +232,23 @@ public class ReflectionUtilsTest {
 		assert ReflectionUtils.wrapClass(Object.class) == Object.class;
 	}
 
+	@Test
+	public void createEnumTest() {
+		assert TestEnum.values().length == 1;
+
+		TestEnum newValue = ReflectionUtils.createEnum(TestEnum.class, "B");
+
+		assert newValue.ordinal() == 1;
+		assert newValue.name().equals("B");
+		assert TestEnum.values().length == 2;
+	}
+
+	static enum TestEnum {
+
+		A;
+
+	}
+
 	static record TestRecord(int a) {
 
 	}

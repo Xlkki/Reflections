@@ -375,6 +375,17 @@ public class ReflectionUtils {
 	}
 
 	/**
+	 * Get enumeration values
+	 *
+	 * @param clazz Enumeration class
+	 *
+	 */
+	@NonNull
+	public <E extends Enum<E>> E[] getValues(@NonNull Class<E> clazz) {
+		return (E[]) ReflectionUtils.getFieldValueOrThrow(ReflectionUtils.getValuesField(clazz));
+	}
+
+	/**
 	 * Set static field value
 	 *
 	 * @param field Field value of which should be changed
@@ -447,6 +458,17 @@ public class ReflectionUtils {
 		} else {
 			UNSAFE.putChar(base, offset, (char) value);
 		}
+	}
+
+	/**
+	 * Set enumeration values
+	 *
+	 * @param clazz  Enumeration class
+	 * @param values New enumeration values
+	 *
+	 */
+	public <E extends Enum<E>> void setValues(@NonNull Class<E> clazz, @NonNull E[] values) {
+		ReflectionUtils.setFieldValue(ReflectionUtils.getValuesField(clazz), values);
 	}
 
 	/**
@@ -734,6 +756,23 @@ public class ReflectionUtils {
 	@NonNull
 	public Field getFieldOrThrow(@NonNull Class<?> clazz, @NonNull FieldCondition condition) {
 		return ReflectionUtils.getFieldOrThrow(clazz, ReflectionUtils.getDefaultIncludeSuperClassFields(), condition);
+	}
+
+	/**
+	 * Get enumeration `$VALUES` field
+	 *
+	 * @param clazz Enumeration class
+	 * @return Enumeration values field
+	 *
+	 */
+	@NonNull
+	public Field getValuesField(@NonNull Class<? extends Enum<?>> clazz) {
+		return ReflectionUtils.getFieldOrThrow(
+				clazz,
+				FieldCondition.create()
+						.withName("$VALUES")
+						.withStatic(true)
+		);
 	}
 
 	/**
@@ -1085,6 +1124,79 @@ public class ReflectionUtils {
 		} else {
 			return clazz;
 		}
+	}
+
+	/**
+	 * Change enumeration ordinal
+	 *
+	 * @param enumValue Enumeration value
+	 * @param ordinal   New enumeration ordinal
+	 *
+	 */
+	public <E extends Enum<E>> void setOrdinal(@NonNull E enumValue, int ordinal) {
+		Class<E> enumClass = (Class<E>) enumValue.getClass();
+		FieldCondition condition = FieldCondition.create()
+				.withName("ordinal")
+				.withStatic(false);
+		Field field = ReflectionUtils.getFieldOrThrow(Enum.class, true, condition);
+		E[] enumValues = ReflectionUtils.getValues(enumClass);
+		int oldOrdinal = (int) ReflectionUtils.getFieldValue(enumValue, field);
+		if (oldOrdinal >= 0) {
+			enumValues[oldOrdinal] = null;
+		}
+		ReflectionUtils.setFieldValue(enumValue, field, ordinal);
+		if (ordinal >= 0) {
+			if (enumValues.length <= enumValue.ordinal()) {
+				enumValues = Arrays.copyOf(enumValues, enumValue.ordinal() + 1);
+			}
+			enumValues[ordinal] = enumValue;
+		}
+		ReflectionUtils.setValues(enumClass, enumValues);
+	}
+
+	/**
+	 * Change enumeration name
+	 *
+	 * @param enumValue Enumeration value
+	 * @param name      New enumeration name
+	 *
+	 */
+	public <E extends Enum<E>> void setName(@NonNull E enumValue, String name) {
+		Class<E> enumClass = (Class<E>) enumValue.getClass();
+		FieldCondition directoryCondition = FieldCondition.create()
+				.withName("enumConstantDirectory")
+				.withStatic(false);
+		FieldCondition nameCondition = FieldCondition.create()
+				.withName("name")
+				.withStatic(false);
+		Field directoryField = ReflectionUtils.getFieldOrThrow(Class.class, directoryCondition);
+		Field nameField = ReflectionUtils.getFieldOrThrow(Enum.class, nameCondition);
+		Map<String, E> enumValues = (Map<String, E>) ReflectionUtils.getFieldValue(enumClass, directoryField);
+		String oldName = (String) ReflectionUtils.getFieldValue(enumValue, nameField);
+		if (oldName != null && enumValues != null) {
+			enumValues.remove(oldName);
+		}
+		ReflectionUtils.setFieldValue(enumValue, nameField, name);
+		if (enumValues != null && name != null) {
+			enumValues.put(name, enumValue);
+		}
+	}
+
+	/**
+	 * Create custom enumeration value and inject them into internal fields
+	 *
+	 * @param enumClass Enumeration class
+	 * @param name      Enumeration name
+	 * @return New enumeration value
+	 */
+	@NonNull
+	@SneakyThrows
+	public <E extends Enum<E>> E createEnum(@NonNull Class<E> enumClass, @NonNull String name) {
+		E[] enumValues = ReflectionUtils.getValues(enumClass);
+		E enumValue = ReflectionUtils.allocateInstance(enumClass);
+		ReflectionUtils.setOrdinal(enumValue, enumValues.length);
+		ReflectionUtils.setName(enumValue, name);
+		return enumValue;
 	}
 
 
