@@ -54,7 +54,76 @@ public class Reflections {
 	 * */
 	@NonNull
 	public <E> E allocateInstance(@NonNull Class<E> clazz) throws InstantiationException {
-		return (E) UNSAFE.allocateInstance(clazz);
+		return clazz.cast(UNSAFE.allocateInstance(clazz));
+	}
+
+	private long getObjectFieldOffset(@NonNull Field field) {
+		if (!field.getDeclaringClass().isRecord()) {
+			return UNSAFE.objectFieldOffset(field);
+		} else {
+			throw new IllegalStateException("Temporary not supported for record classes");
+		}
+	}
+
+	private long getStaticFieldOffset(@NonNull Field field) {
+		if (!field.getDeclaringClass().isRecord()) {
+			return UNSAFE.staticFieldOffset(field);
+		} else {
+			throw new IllegalStateException("Temporary not supported for record classes");
+		}
+	}
+
+	/**
+	 * Get static field value
+	 *
+	 * @param field Field value of which should be returned
+	 *
+	 * @return Value of static method (maybe null)
+	 * */
+	public Object getFieldValue(@NonNull Field field) {
+		Reflections.initClass(field.getDeclaringClass());
+		Object base = UNSAFE.staticFieldBase(field);
+		long offset = Reflections.getStaticFieldOffset(field);
+		return Reflections.getFieldValue(field, base, offset);
+	}
+
+	/**
+	 * Get non-static field value
+	 *
+	 * @param instance Instance of field declared class
+	 * @param field Field value of which should be returned
+	 *
+	 * @return Value of non-static method (maybe null)
+	 * */
+	public Object getFieldValue(@NonNull Object instance, @NonNull Field field) {
+		Reflections.initClass(field.getDeclaringClass());
+		long offset = Reflections.getObjectFieldOffset(field);
+		return Reflections.getFieldValue(field, instance, offset);
+	}
+
+	private Object getFieldValue(@NonNull Field field, @NonNull Object base, long offset) {
+		Class<?> type = field.getType();
+		if (!type.isPrimitive()) {
+			return UNSAFE.getObject(base, offset);
+		} else if (type == boolean.class) {
+			return UNSAFE.getBoolean(base, offset);
+		} else if (type == byte.class) {
+			return UNSAFE.getByte(base, offset);
+		} else if (type == short.class) {
+			return UNSAFE.getShort(base, offset);
+		} else if (type == int.class) {
+			return UNSAFE.getInt(base, offset);
+		} else if (type == long.class) {
+			return UNSAFE.getLong(base, offset);
+		} else if (type == float.class) {
+			return UNSAFE.getFloat(base, offset);
+		} else if (type == double.class) {
+			return UNSAFE.getDouble(base, offset);
+		} else if (type == char.class) {
+			return UNSAFE.getChar(base, offset);
+		} else {
+			throw new IllegalArgumentException("Can not get value of field with primary type %s".formatted(type.getSimpleName()));
+		}
 	}
 
 }
