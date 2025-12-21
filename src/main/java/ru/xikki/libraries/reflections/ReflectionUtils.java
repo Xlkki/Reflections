@@ -15,13 +15,17 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 @UtilityClass
-public class Reflections {
+public class ReflectionUtils {
 
 	private final Unsafe UNSAFE;
+	private final Object INTERNAL_UNSAFE;
 
 	private final Field MODULE_FIELD;
+
 	private final Method GET_DECLARED_FIELDS_METHOD;
 	private final Method GET_DECLARED_METHODS_METHOD;
+	private final Method OBJECT_FIELD_OFFSET_METHOD;
+	private final Method STATIC_FIELD_OFFSET_METHOD;
 
 	private final Map<Class<?>, Module> DEFAULT_MODULES;
 
@@ -38,12 +42,28 @@ public class Reflections {
 
 			MODULE_FIELD = Class.class.getDeclaredField("module");
 
-			Reflections.setClassAccessible(Class.class);
+			ReflectionUtils.setClassAccessible(Class.class);
 			GET_DECLARED_FIELDS_METHOD = Class.class.getDeclaredMethod("getDeclaredFields0", boolean.class);
 			GET_DECLARED_METHODS_METHOD = Class.class.getDeclaredMethod("getDeclaredMethods0", boolean.class);
 			GET_DECLARED_FIELDS_METHOD.setAccessible(true);
 			GET_DECLARED_METHODS_METHOD.setAccessible(true);
-			Reflections.resetClassAccessible(Class.class);
+			ReflectionUtils.resetClassAccessible(Class.class);
+
+			ReflectionUtils.setClassAccessible(Unsafe.class);
+			INTERNAL_UNSAFE = ReflectionUtils.getFieldValueOrThrow(Unsafe.class, "theInternalUnsafe");
+			ReflectionUtils.resetClassAccessible(Unsafe.class);
+
+			ReflectionUtils.setClassAccessible(INTERNAL_UNSAFE.getClass());
+			OBJECT_FIELD_OFFSET_METHOD = ReflectionUtils.getMethodOrThrow(INTERNAL_UNSAFE.getClass(), false, (method) -> {
+				return method.getName().equals("objectFieldOffset") && method.getParameterCount() == 1;
+			});
+			STATIC_FIELD_OFFSET_METHOD = ReflectionUtils.getMethodOrThrow(INTERNAL_UNSAFE.getClass(), false, (method) -> {
+				return method.getName().equals("staticFieldOffset") && method.getParameterCount() == 1;
+			});
+
+			OBJECT_FIELD_OFFSET_METHOD.setAccessible(true);
+			STATIC_FIELD_OFFSET_METHOD.setAccessible(true);
+			ReflectionUtils.resetClassAccessible(INTERNAL_UNSAFE.getClass());
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -67,7 +87,7 @@ public class Reflections {
 	 *
 	 */
 	public static void setDefaultIncludeSuperClassFields(boolean defaultIncludeSuperClassFields) {
-		Reflections.defaultIncludeSuperClassFields = defaultIncludeSuperClassFields;
+		ReflectionUtils.defaultIncludeSuperClassFields = defaultIncludeSuperClassFields;
 	}
 
 	/**
@@ -88,7 +108,7 @@ public class Reflections {
 	 *
 	 */
 	public static void setDefaultIncludeSuperClassMethods(boolean defaultIncludeSuperClassMethods) {
-		Reflections.defaultIncludeSuperClassMethods = defaultIncludeSuperClassMethods;
+		ReflectionUtils.defaultIncludeSuperClassMethods = defaultIncludeSuperClassMethods;
 	}
 
 	/**
@@ -126,19 +146,21 @@ public class Reflections {
 		return clazz.cast(UNSAFE.allocateInstance(clazz));
 	}
 
+	@SneakyThrows
 	private long getObjectFieldOffset(@NonNull Field field) {
 		if (!field.getDeclaringClass().isRecord()) {
 			return UNSAFE.objectFieldOffset(field);
 		} else {
-			throw new IllegalStateException("Temporary not supported for record classes");
+			return (long) OBJECT_FIELD_OFFSET_METHOD.invoke(INTERNAL_UNSAFE, field);
 		}
 	}
 
+	@SneakyThrows
 	private long getStaticFieldOffset(@NonNull Field field) {
 		if (!field.getDeclaringClass().isRecord()) {
 			return UNSAFE.staticFieldOffset(field);
 		} else {
-			throw new IllegalStateException("Temporary not supported for record classes");
+			return (long) STATIC_FIELD_OFFSET_METHOD.invoke(INTERNAL_UNSAFE, field);
 		}
 	}
 
@@ -150,10 +172,10 @@ public class Reflections {
 	 *
 	 */
 	public Object getFieldValue(@NonNull Field field) {
-		Reflections.initClass(field.getDeclaringClass());
+		ReflectionUtils.initClass(field.getDeclaringClass());
 		Object base = UNSAFE.staticFieldBase(field);
-		long offset = Reflections.getStaticFieldOffset(field);
-		return Reflections.getFieldValue(field, base, offset);
+		long offset = ReflectionUtils.getStaticFieldOffset(field);
+		return ReflectionUtils.getFieldValue(field, base, offset);
 	}
 
 	/**
@@ -165,7 +187,7 @@ public class Reflections {
 	 */
 	@NonNull
 	public Optional<Object> getOptionalFieldValue(@NonNull Field field) {
-		return Optional.ofNullable(Reflections.getFieldValue(field));
+		return Optional.ofNullable(ReflectionUtils.getFieldValue(field));
 	}
 
 	/**
@@ -177,7 +199,7 @@ public class Reflections {
 	 */
 	@NonNull
 	public Object getFieldValueOrThrow(@NonNull Field field) {
-		return Reflections.getOptionalFieldValue(field)
+		return ReflectionUtils.getOptionalFieldValue(field)
 				.orElseThrow();
 	}
 
@@ -190,7 +212,7 @@ public class Reflections {
 	 *
 	 */
 	public Object getFieldValue(@NonNull Class<?> clazz, @NonNull String name) {
-		return Reflections.getFieldValue(Reflections.getFieldOrThrow(clazz, name));
+		return ReflectionUtils.getFieldValue(ReflectionUtils.getFieldOrThrow(clazz, name));
 	}
 
 	/**
@@ -203,7 +225,7 @@ public class Reflections {
 	 */
 	@NonNull
 	public Optional<Object> getOptionalFieldValue(@NonNull Class<?> clazz, @NonNull String name) {
-		return Reflections.getOptionalFieldValue(Reflections.getFieldOrThrow(clazz, name));
+		return ReflectionUtils.getOptionalFieldValue(ReflectionUtils.getFieldOrThrow(clazz, name));
 	}
 
 	/**
@@ -216,7 +238,7 @@ public class Reflections {
 	 */
 	@NonNull
 	public Object getFieldValueOrThrow(@NonNull Class<?> clazz, @NonNull String name) {
-		return Reflections.getFieldValueOrThrow(Reflections.getFieldOrThrow(clazz, name));
+		return ReflectionUtils.getFieldValueOrThrow(ReflectionUtils.getFieldOrThrow(clazz, name));
 	}
 
 	/**
@@ -228,9 +250,9 @@ public class Reflections {
 	 *
 	 */
 	public Object getFieldValue(@NonNull Object instance, @NonNull Field field) {
-		Reflections.initClass(field.getDeclaringClass());
-		long offset = Reflections.getObjectFieldOffset(field);
-		return Reflections.getFieldValue(field, instance, offset);
+		ReflectionUtils.initClass(field.getDeclaringClass());
+		long offset = ReflectionUtils.getObjectFieldOffset(field);
+		return ReflectionUtils.getFieldValue(field, instance, offset);
 	}
 
 	/**
@@ -243,7 +265,7 @@ public class Reflections {
 	 */
 	@NonNull
 	public Optional<Object> getOptionalFieldValue(@NonNull Object instance, @NonNull Field field) {
-		return Optional.ofNullable(Reflections.getFieldValue(instance, field));
+		return Optional.ofNullable(ReflectionUtils.getFieldValue(instance, field));
 	}
 
 	/**
@@ -256,7 +278,7 @@ public class Reflections {
 	 */
 	@NonNull
 	public Object getFieldValueOrThrow(@NonNull Object instance, @NonNull Field field) {
-		return Reflections.getOptionalFieldValue(instance, field)
+		return ReflectionUtils.getOptionalFieldValue(instance, field)
 				.orElseThrow();
 	}
 
@@ -269,7 +291,7 @@ public class Reflections {
 	 *
 	 */
 	public Object getFieldValue(@NonNull Object instance, @NonNull String name) {
-		return Reflections.getFieldValue(instance, Reflections.getFieldOrThrow(instance.getClass(), name));
+		return ReflectionUtils.getFieldValue(instance, ReflectionUtils.getFieldOrThrow(instance.getClass(), name));
 	}
 
 	/**
@@ -282,7 +304,7 @@ public class Reflections {
 	 */
 	@NonNull
 	public Optional<Object> getOptionalFieldValue(@NonNull Object instance, @NonNull String name) {
-		return Reflections.getOptionalFieldValue(instance, Reflections.getFieldOrThrow(instance.getClass(), name));
+		return ReflectionUtils.getOptionalFieldValue(instance, ReflectionUtils.getFieldOrThrow(instance.getClass(), name));
 	}
 
 	/**
@@ -295,7 +317,7 @@ public class Reflections {
 	 */
 	@NonNull
 	public Object getFieldValueOrThrow(@NonNull Object instance, @NonNull String name) {
-		return Reflections.getFieldValueOrThrow(instance, Reflections.getFieldOrThrow(instance.getClass(), name));
+		return ReflectionUtils.getFieldValueOrThrow(instance, ReflectionUtils.getFieldOrThrow(instance.getClass(), name));
 	}
 
 	private Object getFieldValue(@NonNull Field field, @NonNull Object base, long offset) {
@@ -330,10 +352,10 @@ public class Reflections {
 	 * @param value New field value (maybe null)
 	 */
 	public void setFieldValue(@NonNull Field field, Object value) {
-		Reflections.initClass(field.getDeclaringClass());
+		ReflectionUtils.initClass(field.getDeclaringClass());
 		Object base = UNSAFE.staticFieldBase(field);
-		long offset = Reflections.getStaticFieldOffset(field);
-		Reflections.setFieldValue(field, base, offset, value);
+		long offset = ReflectionUtils.getStaticFieldOffset(field);
+		ReflectionUtils.setFieldValue(field, base, offset, value);
 	}
 
 	/**
@@ -345,7 +367,7 @@ public class Reflections {
 	 *
 	 */
 	public void setFieldValue(@NonNull Class<?> clazz, @NonNull String name, Object value) {
-		Reflections.setFieldValue(Reflections.getFieldOrThrow(clazz, name), value);
+		ReflectionUtils.setFieldValue(ReflectionUtils.getFieldOrThrow(clazz, name), value);
 	}
 
 	/**
@@ -357,9 +379,9 @@ public class Reflections {
 	 *
 	 */
 	public void setFieldValue(@NonNull Object instance, @NonNull Field field, Object value) {
-		Reflections.initClass(field.getDeclaringClass());
-		long offset = Reflections.getObjectFieldOffset(field);
-		Reflections.setFieldValue(field, instance, offset, value);
+		ReflectionUtils.initClass(field.getDeclaringClass());
+		long offset = ReflectionUtils.getObjectFieldOffset(field);
+		ReflectionUtils.setFieldValue(field, instance, offset, value);
 	}
 
 	/**
@@ -372,7 +394,7 @@ public class Reflections {
 	 *
 	 */
 	public void setFieldValue(@NonNull Object instance, @NonNull String name, Object value) {
-		Reflections.setFieldValue(instance, Reflections.getFieldOrThrow(instance.getClass(), name), value);
+		ReflectionUtils.setFieldValue(instance, ReflectionUtils.getFieldOrThrow(instance.getClass(), name), value);
 	}
 
 	private void setFieldValue(@NonNull Field field, @NonNull Object base, long offset, Object value) {
@@ -410,7 +432,7 @@ public class Reflections {
 		}
 		Module module = clazz.getModule();
 		DEFAULT_MODULES.put(clazz, module);
-		Reflections.setFieldValue(clazz, MODULE_FIELD, Reflections.class.getModule());
+		ReflectionUtils.setFieldValue(clazz, MODULE_FIELD, ReflectionUtils.class.getModule());
 	}
 
 	/**
@@ -423,7 +445,7 @@ public class Reflections {
 		if (defaultModule == null) {
 			return;
 		}
-		Reflections.setFieldValue(clazz, MODULE_FIELD, defaultModule);
+		ReflectionUtils.setFieldValue(clazz, MODULE_FIELD, defaultModule);
 	}
 
 	/**
@@ -445,7 +467,7 @@ public class Reflections {
 			if (superClass == null) {
 				return currentClassFields;
 			}
-			Field[] superClassFields = Reflections.getFields(superClass, true);
+			Field[] superClassFields = ReflectionUtils.getFields(superClass, true);
 			return Stream.concat(Arrays.stream(currentClassFields), Arrays.stream(superClassFields)).toArray(Field[]::new);
 		}
 	}
@@ -455,17 +477,17 @@ public class Reflections {
 	 *
 	 * @param clazz Class fields of which should be returned
 	 * @return Array with fields
-	 * @see Reflections#setDefaultIncludeSuperClassFields(boolean)
+	 * @see ReflectionUtils#setDefaultIncludeSuperClassFields(boolean)
 	 *
 	 */
 	@NonNull
 	public Field[] getFields(@NonNull Class<?> clazz) {
-		return Reflections.getFields(clazz, Reflections.getDefaultIncludeSuperClassFields());
+		return ReflectionUtils.getFields(clazz, ReflectionUtils.getDefaultIncludeSuperClassFields());
 	}
 
 	@NonNull
 	private Stream<Field> getFields0(@NonNull Class<?> clazz, boolean includeSuper, @NonNull Predicate<Field> condition) {
-		return Arrays.stream(Reflections.getFields(clazz, includeSuper)).filter(condition);
+		return Arrays.stream(ReflectionUtils.getFields(clazz, includeSuper)).filter(condition);
 	}
 
 	/**
@@ -479,7 +501,7 @@ public class Reflections {
 	 */
 	@NonNull
 	public Field[] getFields(@NonNull Class<?> clazz, boolean includeSuper, @NonNull Predicate<Field> condition) {
-		return Reflections.getFields0(clazz, includeSuper, condition).toArray(Field[]::new);
+		return ReflectionUtils.getFields0(clazz, includeSuper, condition).toArray(Field[]::new);
 	}
 
 	/**
@@ -488,11 +510,11 @@ public class Reflections {
 	 * @param clazz     Class fields of which should be returned
 	 * @param condition Field condition
 	 * @return Array with fields
-	 * @see Reflections#setDefaultIncludeSuperClassFields(boolean)
+	 * @see ReflectionUtils#setDefaultIncludeSuperClassFields(boolean)
 	 */
 	@NonNull
 	public Field[] getFields(@NonNull Class<?> clazz, @NonNull Predicate<Field> condition) {
-		return Reflections.getFields(clazz, Reflections.getDefaultIncludeSuperClassFields(), condition);
+		return ReflectionUtils.getFields(clazz, ReflectionUtils.getDefaultIncludeSuperClassFields(), condition);
 	}
 
 	/**
@@ -506,7 +528,7 @@ public class Reflections {
 	 */
 	@NonNull
 	public Field[] getFields(@NonNull Class<?> clazz, boolean includeSuper, @NonNull String name) {
-		return Reflections.getFields(clazz, includeSuper, (field) -> field.getName().equals(name));
+		return ReflectionUtils.getFields(clazz, includeSuper, (field) -> field.getName().equals(name));
 	}
 
 	/**
@@ -515,12 +537,12 @@ public class Reflections {
 	 * @param clazz Class fields of which should be returned
 	 * @param name  Field name
 	 * @return Array with fields by name
-	 * @see Reflections#setDefaultIncludeSuperClassFields(boolean)
+	 * @see ReflectionUtils#setDefaultIncludeSuperClassFields(boolean)
 	 *
 	 */
 	@NonNull
 	public Field[] getFields(@NonNull Class<?> clazz, @NonNull String name) {
-		return Reflections.getFields(clazz, Reflections.getDefaultIncludeSuperClassFields(), name);
+		return ReflectionUtils.getFields(clazz, ReflectionUtils.getDefaultIncludeSuperClassFields(), name);
 	}
 
 	/**
@@ -534,7 +556,7 @@ public class Reflections {
 	 */
 	@NonNull
 	public Optional<Field> getOptionalField(@NonNull Class<?> clazz, boolean includeSuper, @NonNull Predicate<Field> condition) {
-		return Reflections.getFields0(clazz, includeSuper, condition).findFirst();
+		return ReflectionUtils.getFields0(clazz, includeSuper, condition).findFirst();
 	}
 
 	/**
@@ -543,12 +565,12 @@ public class Reflections {
 	 * @param clazz     Class field of which should be returned
 	 * @param condition Field condition
 	 * @return Optional with field by condition
-	 * @see Reflections#setDefaultIncludeSuperClassFields(boolean)
+	 * @see ReflectionUtils#setDefaultIncludeSuperClassFields(boolean)
 	 *
 	 */
 	@NonNull
 	public Optional<Field> getOptionalField(@NonNull Class<?> clazz, @NonNull Predicate<Field> condition) {
-		return Reflections.getOptionalField(clazz, Reflections.getDefaultIncludeSuperClassFields(), condition);
+		return ReflectionUtils.getOptionalField(clazz, ReflectionUtils.getDefaultIncludeSuperClassFields(), condition);
 	}
 
 	/**
@@ -562,7 +584,7 @@ public class Reflections {
 	 */
 	@NonNull
 	public Optional<Field> getOptionalField(@NonNull Class<?> clazz, boolean includeSuper, @NonNull String name) {
-		return Reflections.getOptionalField(clazz, includeSuper, (field) -> field.getName().equals(name));
+		return ReflectionUtils.getOptionalField(clazz, includeSuper, (field) -> field.getName().equals(name));
 	}
 
 	/**
@@ -571,12 +593,12 @@ public class Reflections {
 	 * @param clazz Class field of which should be returned
 	 * @param name  Field name
 	 * @return Optional with field by name
-	 * @see Reflections#setDefaultIncludeSuperClassFields(boolean)
+	 * @see ReflectionUtils#setDefaultIncludeSuperClassFields(boolean)
 	 *
 	 */
 	@NonNull
 	public Optional<Field> getOptionalField(@NonNull Class<?> clazz, @NonNull String name) {
-		return Reflections.getOptionalField(clazz, Reflections.getDefaultIncludeSuperClassFields(), name);
+		return ReflectionUtils.getOptionalField(clazz, ReflectionUtils.getDefaultIncludeSuperClassFields(), name);
 	}
 
 	/**
@@ -589,7 +611,7 @@ public class Reflections {
 	 *
 	 */
 	public Field getField(@NonNull Class<?> clazz, boolean includeSuper, @NonNull Predicate<Field> condition) {
-		return Reflections.getOptionalField(clazz, includeSuper, condition).orElse(null);
+		return ReflectionUtils.getOptionalField(clazz, includeSuper, condition).orElse(null);
 	}
 
 	/**
@@ -598,11 +620,11 @@ public class Reflections {
 	 * @param clazz     Class field of which should be returned
 	 * @param condition Field condition
 	 * @return Field by condition (or null)
-	 * @see Reflections#setDefaultIncludeSuperClassFields(boolean)
+	 * @see ReflectionUtils#setDefaultIncludeSuperClassFields(boolean)
 	 *
 	 */
 	public Field getField(@NonNull Class<?> clazz, @NonNull Predicate<Field> condition) {
-		return Reflections.getOptionalField(clazz, condition).orElse(null);
+		return ReflectionUtils.getOptionalField(clazz, condition).orElse(null);
 	}
 
 	/**
@@ -615,7 +637,7 @@ public class Reflections {
 	 *
 	 */
 	public Field getField(@NonNull Class<?> clazz, boolean includeSuper, @NonNull String name) {
-		return Reflections.getField(clazz, includeSuper, (field) -> field.getName().equals(name));
+		return ReflectionUtils.getField(clazz, includeSuper, (field) -> field.getName().equals(name));
 	}
 
 	/**
@@ -624,11 +646,11 @@ public class Reflections {
 	 * @param clazz Class field of which should be returned
 	 * @param name  Field name
 	 * @return Field by name (or null)
-	 * @see Reflections#setDefaultIncludeSuperClassFields(boolean)
+	 * @see ReflectionUtils#setDefaultIncludeSuperClassFields(boolean)
 	 *
 	 */
 	public Field getField(@NonNull Class<?> clazz, @NonNull String name) {
-		return Reflections.getField(clazz, Reflections.getDefaultIncludeSuperClassFields(), name);
+		return ReflectionUtils.getField(clazz, ReflectionUtils.getDefaultIncludeSuperClassFields(), name);
 	}
 
 	/**
@@ -642,7 +664,7 @@ public class Reflections {
 	 */
 	@NonNull
 	public Field getFieldOrThrow(@NonNull Class<?> clazz, boolean includeSuper, @NonNull Predicate<Field> condition) {
-		return Reflections.getOptionalField(clazz, includeSuper, condition).orElseThrow();
+		return ReflectionUtils.getOptionalField(clazz, includeSuper, condition).orElseThrow();
 	}
 
 	/**
@@ -651,11 +673,11 @@ public class Reflections {
 	 * @param clazz     Class field of which should be returned
 	 * @param condition Field condition
 	 * @return Field by condition
-	 * @see Reflections#setDefaultIncludeSuperClassFields(boolean)
+	 * @see ReflectionUtils#setDefaultIncludeSuperClassFields(boolean)
 	 */
 	@NonNull
 	public Field getFieldOrThrow(@NonNull Class<?> clazz, @NonNull Predicate<Field> condition) {
-		return Reflections.getOptionalField(clazz, condition).orElseThrow();
+		return ReflectionUtils.getOptionalField(clazz, condition).orElseThrow();
 	}
 
 	/**
@@ -669,7 +691,7 @@ public class Reflections {
 	 */
 	@NonNull
 	public Field getFieldOrThrow(@NonNull Class<?> clazz, boolean includeSuper, @NonNull String name) {
-		return Reflections.getFieldOrThrow(clazz, includeSuper, (field) -> field.getName().equals(name));
+		return ReflectionUtils.getFieldOrThrow(clazz, includeSuper, (field) -> field.getName().equals(name));
 	}
 
 	/**
@@ -678,11 +700,11 @@ public class Reflections {
 	 * @param clazz Class field of which should be returned
 	 * @param name  Field name
 	 * @return Field by name
-	 * @see Reflections#setDefaultIncludeSuperClassFields(boolean)
+	 * @see ReflectionUtils#setDefaultIncludeSuperClassFields(boolean)
 	 */
 	@NonNull
 	public Field getFieldOrThrow(@NonNull Class<?> clazz, @NonNull String name) {
-		return Reflections.getFieldOrThrow(clazz, Reflections.getDefaultIncludeSuperClassFields(), name);
+		return ReflectionUtils.getFieldOrThrow(clazz, ReflectionUtils.getDefaultIncludeSuperClassFields(), name);
 	}
 
 	/**
@@ -704,7 +726,7 @@ public class Reflections {
 			if (superClass == null) {
 				return currentClassMethods;
 			}
-			Method[] superClassMethods = Reflections.getMethods(superClass, true);
+			Method[] superClassMethods = ReflectionUtils.getMethods(superClass, true);
 			return Stream.concat(Arrays.stream(currentClassMethods), Arrays.stream(superClassMethods)).toArray(Method[]::new);
 		}
 	}
@@ -714,17 +736,17 @@ public class Reflections {
 	 *
 	 * @param clazz Class methods of which should be returned
 	 * @return Array with methods
-	 * @see Reflections#setDefaultIncludeSuperClassMethods(boolean)
+	 * @see ReflectionUtils#setDefaultIncludeSuperClassMethods(boolean)
 	 *
 	 */
 	@NonNull
 	public Method[] getMethods(@NonNull Class<?> clazz) {
-		return Reflections.getMethods(clazz, Reflections.getDefaultIncludeSuperClassMethods());
+		return ReflectionUtils.getMethods(clazz, ReflectionUtils.getDefaultIncludeSuperClassMethods());
 	}
 
 	@NonNull
 	private Stream<Method> getMethods0(@NonNull Class<?> clazz, boolean includeSuper, @NonNull Predicate<Method> condition) {
-		return Arrays.stream(Reflections.getMethods(clazz, includeSuper)).filter(condition);
+		return Arrays.stream(ReflectionUtils.getMethods(clazz, includeSuper)).filter(condition);
 	}
 
 	/**
@@ -738,7 +760,7 @@ public class Reflections {
 	 */
 	@NonNull
 	public Method[] getMethods(@NonNull Class<?> clazz, boolean includeSuper, @NonNull Predicate<Method> condition) {
-		return Reflections.getMethods0(clazz, includeSuper, condition).toArray(Method[]::new);
+		return ReflectionUtils.getMethods0(clazz, includeSuper, condition).toArray(Method[]::new);
 	}
 
 	/**
@@ -747,11 +769,11 @@ public class Reflections {
 	 * @param clazz     Class methods of which should be returned
 	 * @param condition Method condition
 	 * @return Array with methods
-	 * @see Reflections#setDefaultIncludeSuperClassMethods(boolean)
+	 * @see ReflectionUtils#setDefaultIncludeSuperClassMethods(boolean)
 	 */
 	@NonNull
 	public Method[] getMethods(@NonNull Class<?> clazz, @NonNull Predicate<Method> condition) {
-		return Reflections.getMethods(clazz, Reflections.getDefaultIncludeSuperClassMethods(), condition);
+		return ReflectionUtils.getMethods(clazz, ReflectionUtils.getDefaultIncludeSuperClassMethods(), condition);
 	}
 
 	/**
@@ -765,7 +787,7 @@ public class Reflections {
 	 */
 	@NonNull
 	public Method[] getMethods(@NonNull Class<?> clazz, boolean includeSuper, @NonNull String name) {
-		return Reflections.getMethods(clazz, includeSuper, (method) -> method.getName().equals(name));
+		return ReflectionUtils.getMethods(clazz, includeSuper, (method) -> method.getName().equals(name));
 	}
 
 	/**
@@ -774,12 +796,12 @@ public class Reflections {
 	 * @param clazz Class methods of which should be returned
 	 * @param name  Method name
 	 * @return Array with methods by name
-	 * @see Reflections#setDefaultIncludeSuperClassMethods(boolean)
+	 * @see ReflectionUtils#setDefaultIncludeSuperClassMethods(boolean)
 	 *
 	 */
 	@NonNull
 	public Method[] getMethods(@NonNull Class<?> clazz, @NonNull String name) {
-		return Reflections.getMethods(clazz, Reflections.getDefaultIncludeSuperClassMethods(), name);
+		return ReflectionUtils.getMethods(clazz, ReflectionUtils.getDefaultIncludeSuperClassMethods(), name);
 	}
 
 	/**
@@ -793,7 +815,7 @@ public class Reflections {
 	 */
 	@NonNull
 	public Optional<Method> getOptionalMethod(@NonNull Class<?> clazz, boolean includeSuper, @NonNull Predicate<Method> condition) {
-		return Reflections.getMethods0(clazz, includeSuper, condition).findFirst();
+		return ReflectionUtils.getMethods0(clazz, includeSuper, condition).findFirst();
 	}
 
 	/**
@@ -802,12 +824,12 @@ public class Reflections {
 	 * @param clazz     Class method of which should be returned
 	 * @param condition Method condition
 	 * @return Optional with method by condition
-	 * @see Reflections#setDefaultIncludeSuperClassMethods(boolean)
+	 * @see ReflectionUtils#setDefaultIncludeSuperClassMethods(boolean)
 	 *
 	 */
 	@NonNull
 	public Optional<Method> getOptionalMethod(@NonNull Class<?> clazz, @NonNull Predicate<Method> condition) {
-		return Reflections.getOptionalMethod(clazz, Reflections.getDefaultIncludeSuperClassMethods(), condition);
+		return ReflectionUtils.getOptionalMethod(clazz, ReflectionUtils.getDefaultIncludeSuperClassMethods(), condition);
 	}
 
 	/**
@@ -821,7 +843,7 @@ public class Reflections {
 	 */
 	@NonNull
 	public Optional<Method> getOptionalMethod(@NonNull Class<?> clazz, boolean includeSuper, @NonNull String name) {
-		return Reflections.getOptionalMethod(clazz, includeSuper, (method) -> method.getName().equals(name));
+		return ReflectionUtils.getOptionalMethod(clazz, includeSuper, (method) -> method.getName().equals(name));
 	}
 
 	/**
@@ -830,12 +852,12 @@ public class Reflections {
 	 * @param clazz Class method of which should be returned
 	 * @param name  Method name
 	 * @return Optional with method by name
-	 * @see Reflections#setDefaultIncludeSuperClassMethods(boolean)
+	 * @see ReflectionUtils#setDefaultIncludeSuperClassMethods(boolean)
 	 *
 	 */
 	@NonNull
 	public Optional<Method> getOptionalMethod(@NonNull Class<?> clazz, @NonNull String name) {
-		return Reflections.getOptionalMethod(clazz, Reflections.getDefaultIncludeSuperClassMethods(), name);
+		return ReflectionUtils.getOptionalMethod(clazz, ReflectionUtils.getDefaultIncludeSuperClassMethods(), name);
 	}
 
 	/**
@@ -848,7 +870,7 @@ public class Reflections {
 	 *
 	 */
 	public Method getMethod(@NonNull Class<?> clazz, boolean includeSuper, @NonNull Predicate<Method> condition) {
-		return Reflections.getOptionalMethod(clazz, includeSuper, condition).orElse(null);
+		return ReflectionUtils.getOptionalMethod(clazz, includeSuper, condition).orElse(null);
 	}
 
 	/**
@@ -857,11 +879,11 @@ public class Reflections {
 	 * @param clazz     Class method of which should be returned
 	 * @param condition Method condition
 	 * @return Method by condition (or null)
-	 * @see Reflections#setDefaultIncludeSuperClassMethods(boolean)
+	 * @see ReflectionUtils#setDefaultIncludeSuperClassMethods(boolean)
 	 *
 	 */
 	public Method getMethod(@NonNull Class<?> clazz, @NonNull Predicate<Method> condition) {
-		return Reflections.getOptionalMethod(clazz, condition).orElse(null);
+		return ReflectionUtils.getOptionalMethod(clazz, condition).orElse(null);
 	}
 
 	/**
@@ -874,7 +896,7 @@ public class Reflections {
 	 *
 	 */
 	public Method getMethod(@NonNull Class<?> clazz, boolean includeSuper, @NonNull String name) {
-		return Reflections.getMethod(clazz, includeSuper, (method) -> method.getName().equals(name));
+		return ReflectionUtils.getMethod(clazz, includeSuper, (method) -> method.getName().equals(name));
 	}
 
 	/**
@@ -883,11 +905,11 @@ public class Reflections {
 	 * @param clazz Class method of which should be returned
 	 * @param name  Method name
 	 * @return Method by name (or null)
-	 * @see Reflections#setDefaultIncludeSuperClassMethods(boolean)
+	 * @see ReflectionUtils#setDefaultIncludeSuperClassMethods(boolean)
 	 *
 	 */
 	public Method getMethod(@NonNull Class<?> clazz, @NonNull String name) {
-		return Reflections.getMethod(clazz, Reflections.getDefaultIncludeSuperClassMethods(), name);
+		return ReflectionUtils.getMethod(clazz, ReflectionUtils.getDefaultIncludeSuperClassMethods(), name);
 	}
 
 	/**
@@ -901,7 +923,7 @@ public class Reflections {
 	 */
 	@NonNull
 	public Method getMethodOrThrow(@NonNull Class<?> clazz, boolean includeSuper, @NonNull Predicate<Method> condition) {
-		return Reflections.getOptionalMethod(clazz, includeSuper, condition).orElseThrow();
+		return ReflectionUtils.getOptionalMethod(clazz, includeSuper, condition).orElseThrow();
 	}
 
 	/**
@@ -910,11 +932,11 @@ public class Reflections {
 	 * @param clazz     Class method of which should be returned
 	 * @param condition Method condition
 	 * @return Method by condition
-	 * @see Reflections#setDefaultIncludeSuperClassMethods(boolean)
+	 * @see ReflectionUtils#setDefaultIncludeSuperClassMethods(boolean)
 	 */
 	@NonNull
 	public Method getMethodOrThrow(@NonNull Class<?> clazz, @NonNull Predicate<Method> condition) {
-		return Reflections.getOptionalMethod(clazz, condition).orElseThrow();
+		return ReflectionUtils.getOptionalMethod(clazz, condition).orElseThrow();
 	}
 
 	/**
@@ -928,7 +950,7 @@ public class Reflections {
 	 */
 	@NonNull
 	public Method getMethodOrThrow(@NonNull Class<?> clazz, boolean includeSuper, @NonNull String name) {
-		return Reflections.getMethodOrThrow(clazz, includeSuper, (method) -> method.getName().equals(name));
+		return ReflectionUtils.getMethodOrThrow(clazz, includeSuper, (method) -> method.getName().equals(name));
 	}
 
 	/**
@@ -937,11 +959,11 @@ public class Reflections {
 	 * @param clazz Class method of which should be returned
 	 * @param name  Method name
 	 * @return Method by name
-	 * @see Reflections#setDefaultIncludeSuperClassMethods(boolean)
+	 * @see ReflectionUtils#setDefaultIncludeSuperClassMethods(boolean)
 	 */
 	@NonNull
 	public Method getMethodOrThrow(@NonNull Class<?> clazz, @NonNull String name) {
-		return Reflections.getMethodOrThrow(clazz, Reflections.getDefaultIncludeSuperClassMethods(), name);
+		return ReflectionUtils.getMethodOrThrow(clazz, ReflectionUtils.getDefaultIncludeSuperClassMethods(), name);
 	}
 
 }
