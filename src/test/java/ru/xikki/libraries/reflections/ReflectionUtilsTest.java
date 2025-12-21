@@ -133,6 +133,11 @@ public class ReflectionUtilsTest {
 		assert method.equals(method1);
 	}
 
+	@Test
+	public void getLoadedClassesTest() {
+		assert !ReflectionUtils.getLoadedClasses(ReflectionUtilsTest.class.getClassLoader()).isEmpty();
+	}
+
 	static record TestRecord(int a) {
 
 	}

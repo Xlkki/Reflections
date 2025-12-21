@@ -7,10 +7,7 @@ import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -21,6 +18,7 @@ public class ReflectionUtils {
 	private final Object INTERNAL_UNSAFE;
 
 	private final Field MODULE_FIELD;
+	private final Field CLASSES_FIELD;
 
 	private final Method GET_DECLARED_FIELDS_METHOD;
 	private final Method GET_DECLARED_METHODS_METHOD;
@@ -64,6 +62,11 @@ public class ReflectionUtils {
 			OBJECT_FIELD_OFFSET_METHOD.setAccessible(true);
 			STATIC_FIELD_OFFSET_METHOD.setAccessible(true);
 			ReflectionUtils.resetClassAccessible(INTERNAL_UNSAFE.getClass());
+
+			ReflectionUtils.setClassAccessible(ClassLoader.class);
+			CLASSES_FIELD = ReflectionUtils.getFieldOrThrow(ClassLoader.class, "classes");
+			CLASSES_FIELD.setAccessible(true);
+			ReflectionUtils.resetClassAccessible(ClassLoader.class);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -965,5 +968,21 @@ public class ReflectionUtils {
 	public Method getMethodOrThrow(@NonNull Class<?> clazz, @NonNull String name) {
 		return ReflectionUtils.getMethodOrThrow(clazz, ReflectionUtils.getDefaultIncludeSuperClassMethods(), name);
 	}
+
+	/**
+	 * Get classes that loaded in class loader
+	 *
+	 * @param loader Class loader
+	 * @return List of loaded classes
+	 */
+	@NonNull
+	public List<Class<?>> getLoadedClasses(@NonNull ClassLoader loader) {
+		try {
+			return (List<Class<?>>) CLASSES_FIELD.get(loader);
+		} catch (IllegalAccessException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 
 }
