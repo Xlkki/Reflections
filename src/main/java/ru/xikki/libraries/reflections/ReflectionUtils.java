@@ -9,6 +9,8 @@ import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.URI;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -1006,6 +1008,19 @@ public class ReflectionUtils {
 		} catch (IllegalAccessException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	/**
+	 * Get class source file/directory path
+	 *
+	 * @param clazz Class, source path of which should be returned
+	 * @return Source path of specified class
+	 */
+	@NonNull
+	@SneakyThrows
+	public Path getSourcePath(@NonNull Class<?> clazz) {
+		String path = clazz.getProtectionDomain().getCodeSource().getLocation().toExternalForm();
+		return Path.of(new URI(path));
 	}
 
 

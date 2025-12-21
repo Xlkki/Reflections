@@ -6,6 +6,7 @@ import ru.xikki.libraries.reflections.condition.MethodCondition;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
 
 public class ReflectionUtilsTest {
 
@@ -202,6 +203,13 @@ public class ReflectionUtilsTest {
 	@Test
 	public void getLoadedClassesTest() {
 		assert !ReflectionUtils.getLoadedClasses(ReflectionUtilsTest.class.getClassLoader()).isEmpty();
+	}
+
+	@Test
+	public void getSourcePathTest() {
+		assert ReflectionUtils.getSourcePath(ReflectionUtilsTest.class).equals(
+				Path.of("build\\classes\\java\\test").toAbsolutePath()
+		);
 	}
 
 	static record TestRecord(int a) {
