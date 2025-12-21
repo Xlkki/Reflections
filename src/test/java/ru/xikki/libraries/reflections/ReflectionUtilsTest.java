@@ -1,6 +1,7 @@
 package ru.xikki.libraries.reflections;
 
 import org.junit.jupiter.api.Test;
+import ru.xikki.libraries.reflections.condition.FieldCondition;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -31,22 +32,62 @@ public class ReflectionUtilsTest {
 	public void setFieldValueTest() {
 		Object instance = new ReflectionUtilsTest();
 
-		assert ReflectionUtils.getFieldValue(ReflectionUtilsTest.class, "nonNullStaticField").equals("123");
-		assert ReflectionUtils.getFieldValue(instance, "nonNullNonStaticField").equals("123");
+		assert ReflectionUtils.getFieldValue(
+				ReflectionUtilsTest.class,
+				FieldCondition.create()
+						.withName("nonNullStaticField")
+		).equals("123");
+		assert ReflectionUtils.getFieldValue(
+				instance,
+				FieldCondition.create()
+						.withName("nonNullNonStaticField")
+		).equals("123");
 
-		ReflectionUtils.setFieldValue(ReflectionUtilsTest.class, "nonNullStaticField", "321");
-		ReflectionUtils.setFieldValue(instance, "nonNullNonStaticField", "321");
+		ReflectionUtils.setFieldValue(
+				ReflectionUtilsTest.class,
+				FieldCondition.create()
+						.withName("nonNullStaticField"),
+				"321"
+		);
+		ReflectionUtils.setFieldValue(
+				instance,
+				FieldCondition.create()
+						.withName("nonNullNonStaticField"),
+				"321"
+		);
 
-		assert ReflectionUtils.getFieldValue(ReflectionUtilsTest.class, "nonNullStaticField").equals("321");
-		assert ReflectionUtils.getFieldValue(instance, "nonNullNonStaticField").equals("321");
+		assert ReflectionUtils.getFieldValue(
+				ReflectionUtilsTest.class,
+				FieldCondition.create()
+						.withName("nonNullStaticField")
+		).equals("321");
+		assert ReflectionUtils.getFieldValue(
+				instance, FieldCondition.create()
+						.withName("nonNullNonStaticField")
+		).equals("321");
 
-		ReflectionUtils.setFieldValue(ReflectionUtilsTest.class, "nonNullStaticField", "123");
-		ReflectionUtils.setFieldValue(instance, "nonNullNonStaticField", "123");
+		ReflectionUtils.setFieldValue(
+				ReflectionUtilsTest.class,
+				FieldCondition.create()
+						.withName("nonNullStaticField"),
+				"123"
+		);
+		ReflectionUtils.setFieldValue(
+				instance,
+				FieldCondition.create()
+						.withName("nonNullNonStaticField"),
+				"123"
+		);
 	}
 
 	@Test
-	public void classAccessibleTest() throws NoSuchFieldException {
-		Field moduleField = Class.class.getDeclaredField("module");
+	public void classAccessibleTest() {
+		Field moduleField = ReflectionUtils.getFieldOrThrow(
+				Class.class,
+				FieldCondition.create()
+						.withName("module")
+						.withStatic(false)
+		);
 
 		try {
 			moduleField.setAccessible(true);
@@ -79,23 +120,34 @@ public class ReflectionUtilsTest {
 
 	@Test
 	public void getFieldsByConditionTest() throws NoSuchFieldException {
-
 		Field field = A.B.class.getDeclaredField("a");
-		Field field1 = ReflectionUtils.getField(A.B.class, "a");
+		Field field1 = ReflectionUtils.getField(
+				A.B.class,
+				FieldCondition.create()
+						.withName("a")
+		);
 
 		assert field.equals(field1);
 
 		field = A.class.getDeclaredField("a");
-		field1 = ReflectionUtils.getField(A.B.class, true, (someField) -> {
-			return someField.getName().equals("a") && someField.getDeclaringClass() == A.class;
-		});
+		field1 = ReflectionUtils.getField(
+				A.B.class,
+				true,
+				FieldCondition.create()
+						.withName("a")
+						.withDeclaredClass(A.class)
+		);
 
 		assert field.equals(field1);
 	}
 
 	@Test
 	public void getRecordFieldTest() {
-		ReflectionUtils.getFieldOrThrow(TestRecord.class, "a");
+		ReflectionUtils.getFieldOrThrow(
+				TestRecord.class,
+				FieldCondition.create()
+						.withName("a")
+		);
 	}
 
 	@Test
@@ -104,7 +156,12 @@ public class ReflectionUtilsTest {
 
 		assert record.a == 1;
 
-		ReflectionUtils.setFieldValue(record, "a", 2);
+		ReflectionUtils.setFieldValue(
+				record,
+				FieldCondition.create()
+						.withName("a"),
+				2
+		);
 
 		assert record.a == 2;
 	}

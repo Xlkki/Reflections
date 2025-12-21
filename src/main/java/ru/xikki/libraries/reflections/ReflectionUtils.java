@@ -3,6 +3,7 @@ package ru.xikki.libraries.reflections;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
+import ru.xikki.libraries.reflections.condition.FieldCondition;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
@@ -48,7 +49,12 @@ public class ReflectionUtils {
 			ReflectionUtils.resetClassAccessible(Class.class);
 
 			ReflectionUtils.setClassAccessible(Unsafe.class);
-			INTERNAL_UNSAFE = ReflectionUtils.getFieldValueOrThrow(Unsafe.class, "theInternalUnsafe");
+			INTERNAL_UNSAFE = ReflectionUtils.getFieldValueOrThrow(
+					Unsafe.class,
+					FieldCondition.create()
+							.withStatic(true)
+							.withName("theInternalUnsafe")
+			);
 			ReflectionUtils.resetClassAccessible(Unsafe.class);
 
 			ReflectionUtils.setClassAccessible(INTERNAL_UNSAFE.getClass());
@@ -64,7 +70,12 @@ public class ReflectionUtils {
 			ReflectionUtils.resetClassAccessible(INTERNAL_UNSAFE.getClass());
 
 			ReflectionUtils.setClassAccessible(ClassLoader.class);
-			CLASSES_FIELD = ReflectionUtils.getFieldOrThrow(ClassLoader.class, "classes");
+			CLASSES_FIELD = ReflectionUtils.getFieldOrThrow(
+					ClassLoader.class,
+					FieldCondition.create()
+							.withStatic(false)
+							.withName("classes")
+			);
 			CLASSES_FIELD.setAccessible(true);
 			ReflectionUtils.resetClassAccessible(ClassLoader.class);
 		} catch (Exception e) {
@@ -209,39 +220,39 @@ public class ReflectionUtils {
 	/**
 	 * Get static field value
 	 *
-	 * @param clazz Field declared class
-	 * @param name  Field name
+	 * @param clazz     Field declared class
+	 * @param condition Field condition
 	 * @return Value of static field (maybe null)
 	 *
 	 */
-	public Object getFieldValue(@NonNull Class<?> clazz, @NonNull String name) {
-		return ReflectionUtils.getFieldValue(ReflectionUtils.getFieldOrThrow(clazz, name));
+	public Object getFieldValue(@NonNull Class<?> clazz, @NonNull FieldCondition condition) {
+		return ReflectionUtils.getFieldValue(ReflectionUtils.getFieldOrThrow(clazz, condition));
 	}
 
 	/**
 	 * Get static field value wrapped in optional
 	 *
-	 * @param clazz Field declared class
-	 * @param name  Field name
+	 * @param clazz     Field declared class
+	 * @param condition Field condition
 	 * @return Optional with value of static field
 	 *
 	 */
 	@NonNull
-	public Optional<Object> getOptionalFieldValue(@NonNull Class<?> clazz, @NonNull String name) {
-		return ReflectionUtils.getOptionalFieldValue(ReflectionUtils.getFieldOrThrow(clazz, name));
+	public Optional<Object> getOptionalFieldValue(@NonNull Class<?> clazz, @NonNull FieldCondition condition) {
+		return ReflectionUtils.getOptionalFieldValue(ReflectionUtils.getFieldOrThrow(clazz, condition));
 	}
 
 	/**
 	 * Get static field value. If value is null - throw exception
 	 *
-	 * @param clazz Field declared class
-	 * @param name  Field name
+	 * @param clazz     Field declared class
+	 * @param condition Field condition
 	 * @return Value of static field
 	 *
 	 */
 	@NonNull
-	public Object getFieldValueOrThrow(@NonNull Class<?> clazz, @NonNull String name) {
-		return ReflectionUtils.getFieldValueOrThrow(ReflectionUtils.getFieldOrThrow(clazz, name));
+	public Object getFieldValueOrThrow(@NonNull Class<?> clazz, @NonNull FieldCondition condition) {
+		return ReflectionUtils.getFieldValueOrThrow(ReflectionUtils.getFieldOrThrow(clazz, condition));
 	}
 
 	/**
@@ -288,39 +299,39 @@ public class ReflectionUtils {
 	/**
 	 * Get non-static field value
 	 *
-	 * @param instance Instance of field declared class
-	 * @param name     Field name
+	 * @param instance  Instance of field declared class
+	 * @param condition Field condition
 	 * @return Value of non-static field (maybe null)
 	 *
 	 */
-	public Object getFieldValue(@NonNull Object instance, @NonNull String name) {
-		return ReflectionUtils.getFieldValue(instance, ReflectionUtils.getFieldOrThrow(instance.getClass(), name));
+	public Object getFieldValue(@NonNull Object instance, @NonNull FieldCondition condition) {
+		return ReflectionUtils.getFieldValue(instance, ReflectionUtils.getFieldOrThrow(instance.getClass(), condition));
 	}
 
 	/**
 	 * Get non-static field value wrapped in optional
 	 *
-	 * @param instance Instance of field declared class
-	 * @param name     Field name
+	 * @param instance  Instance of field declared class
+	 * @param condition Field condition
 	 * @return Optional with value of non-static field
 	 *
 	 */
 	@NonNull
-	public Optional<Object> getOptionalFieldValue(@NonNull Object instance, @NonNull String name) {
-		return ReflectionUtils.getOptionalFieldValue(instance, ReflectionUtils.getFieldOrThrow(instance.getClass(), name));
+	public Optional<Object> getOptionalFieldValue(@NonNull Object instance, @NonNull FieldCondition condition) {
+		return ReflectionUtils.getOptionalFieldValue(instance, ReflectionUtils.getFieldOrThrow(instance.getClass(), condition));
 	}
 
 	/**
 	 * Get non-static field value. If value is null - throw exception
 	 *
-	 * @param instance Instance of field declared class
-	 * @param name     Field name
+	 * @param instance  Instance of field declared class
+	 * @param condition Field condition
 	 * @return Value of non-static field
 	 *
 	 */
 	@NonNull
-	public Object getFieldValueOrThrow(@NonNull Object instance, @NonNull String name) {
-		return ReflectionUtils.getFieldValueOrThrow(instance, ReflectionUtils.getFieldOrThrow(instance.getClass(), name));
+	public Object getFieldValueOrThrow(@NonNull Object instance, @NonNull FieldCondition condition) {
+		return ReflectionUtils.getFieldValueOrThrow(instance, ReflectionUtils.getFieldOrThrow(instance.getClass(), condition));
 	}
 
 	private Object getFieldValue(@NonNull Field field, @NonNull Object base, long offset) {
@@ -364,13 +375,13 @@ public class ReflectionUtils {
 	/**
 	 * Set static field value
 	 *
-	 * @param clazz Field declared class
-	 * @param name  Field name
-	 * @param value New field value (maybe null)
+	 * @param clazz     Field declared class
+	 * @param condition Field condition
+	 * @param value     New field value (maybe null)
 	 *
 	 */
-	public void setFieldValue(@NonNull Class<?> clazz, @NonNull String name, Object value) {
-		ReflectionUtils.setFieldValue(ReflectionUtils.getFieldOrThrow(clazz, name), value);
+	public void setFieldValue(@NonNull Class<?> clazz, @NonNull FieldCondition condition, Object value) {
+		ReflectionUtils.setFieldValue(ReflectionUtils.getFieldOrThrow(clazz, condition), value);
 	}
 
 	/**
@@ -390,14 +401,14 @@ public class ReflectionUtils {
 	/**
 	 * Set non-static field value
 	 *
-	 * @param instance Instance of field declared class
-	 * @param name     Field name
-	 * @param value    New field value (maybe null)
+	 * @param instance  Instance of field declared class
+	 * @param condition Field condition
+	 * @param value     New field value (maybe null)
 	 *
 	 *
 	 */
-	public void setFieldValue(@NonNull Object instance, @NonNull String name, Object value) {
-		ReflectionUtils.setFieldValue(instance, ReflectionUtils.getFieldOrThrow(instance.getClass(), name), value);
+	public void setFieldValue(@NonNull Object instance, @NonNull FieldCondition condition, Object value) {
+		ReflectionUtils.setFieldValue(instance, ReflectionUtils.getFieldOrThrow(instance.getClass(), condition), value);
 	}
 
 	private void setFieldValue(@NonNull Field field, @NonNull Object base, long offset, Object value) {
@@ -521,31 +532,31 @@ public class ReflectionUtils {
 	}
 
 	/**
-	 * Get specified class fields by name (may include super class fields)
+	 * Get specified class fields by condition (may include super class fields)
 	 *
 	 * @param clazz        Class fields of which should be returned
 	 * @param includeSuper true - if result should contain super class fields, otherwise - false
-	 * @param name         Field name
-	 * @return Array with fields by name
+	 * @param condition    Field condition
+	 * @return Array with fields by condition
 	 *
 	 */
 	@NonNull
-	public Field[] getFields(@NonNull Class<?> clazz, boolean includeSuper, @NonNull String name) {
-		return ReflectionUtils.getFields(clazz, includeSuper, (field) -> field.getName().equals(name));
+	public Field[] getFields(@NonNull Class<?> clazz, boolean includeSuper, @NonNull FieldCondition condition) {
+		return ReflectionUtils.getFields(clazz, includeSuper, condition.asPredicate());
 	}
 
 	/**
-	 * Get specified class fields by name with default `includeSuper` parameter value
+	 * Get specified class fields by condition with default `includeSuper` parameter value
 	 *
-	 * @param clazz Class fields of which should be returned
-	 * @param name  Field name
-	 * @return Array with fields by name
+	 * @param clazz     Class fields of which should be returned
+	 * @param condition Field condition
+	 * @return Array with fields by condition
 	 * @see ReflectionUtils#setDefaultIncludeSuperClassFields(boolean)
 	 *
 	 */
 	@NonNull
-	public Field[] getFields(@NonNull Class<?> clazz, @NonNull String name) {
-		return ReflectionUtils.getFields(clazz, ReflectionUtils.getDefaultIncludeSuperClassFields(), name);
+	public Field[] getFields(@NonNull Class<?> clazz, @NonNull FieldCondition condition) {
+		return ReflectionUtils.getFields(clazz, ReflectionUtils.getDefaultIncludeSuperClassFields(), condition);
 	}
 
 	/**
@@ -577,31 +588,31 @@ public class ReflectionUtils {
 	}
 
 	/**
-	 * Get optional with first field from specified class by name (may include super class fields)
+	 * Get optional with first field from specified class by condition (may include super class fields)
 	 *
 	 * @param clazz        Class field of which should be returned
 	 * @param includeSuper true - if result should contain super class fields, otherwise - false
-	 * @param name         Field name
-	 * @return Optional with field by name
+	 * @param condition    Field condition
+	 * @return Optional with field by condition
 	 *
 	 */
 	@NonNull
-	public Optional<Field> getOptionalField(@NonNull Class<?> clazz, boolean includeSuper, @NonNull String name) {
-		return ReflectionUtils.getOptionalField(clazz, includeSuper, (field) -> field.getName().equals(name));
+	public Optional<Field> getOptionalField(@NonNull Class<?> clazz, boolean includeSuper, @NonNull FieldCondition condition) {
+		return ReflectionUtils.getOptionalField(clazz, includeSuper, condition.asPredicate());
 	}
 
 	/**
-	 * Get optional with first field from specified class by name with default `includeSuper` parameter value
+	 * Get optional with first field from specified class by condition with default `includeSuper` parameter value
 	 *
-	 * @param clazz Class field of which should be returned
-	 * @param name  Field name
-	 * @return Optional with field by name
+	 * @param clazz     Class field of which should be returned
+	 * @param condition Field condition
+	 * @return Optional with field by condition
 	 * @see ReflectionUtils#setDefaultIncludeSuperClassFields(boolean)
 	 *
 	 */
 	@NonNull
-	public Optional<Field> getOptionalField(@NonNull Class<?> clazz, @NonNull String name) {
-		return ReflectionUtils.getOptionalField(clazz, ReflectionUtils.getDefaultIncludeSuperClassFields(), name);
+	public Optional<Field> getOptionalField(@NonNull Class<?> clazz, @NonNull FieldCondition condition) {
+		return ReflectionUtils.getOptionalField(clazz, ReflectionUtils.getDefaultIncludeSuperClassFields(), condition);
 	}
 
 	/**
@@ -631,29 +642,29 @@ public class ReflectionUtils {
 	}
 
 	/**
-	 * Get first field from specified class by name (may include super class fields)
+	 * Get first field from specified class by condition (may include super class fields)
 	 *
 	 * @param clazz        Class field of which should be returned
 	 * @param includeSuper true - if result should contain super class fields, otherwise - false
-	 * @param name         Field name
-	 * @return Field by name (or null)
+	 * @param condition    Field condition
+	 * @return Field by condition (or null)
 	 *
 	 */
-	public Field getField(@NonNull Class<?> clazz, boolean includeSuper, @NonNull String name) {
-		return ReflectionUtils.getField(clazz, includeSuper, (field) -> field.getName().equals(name));
+	public Field getField(@NonNull Class<?> clazz, boolean includeSuper, @NonNull FieldCondition condition) {
+		return ReflectionUtils.getField(clazz, includeSuper, condition.asPredicate());
 	}
 
 	/**
-	 * Get first field from specified class by name with default `includeSuper` parameter value
+	 * Get first field from specified class by condition with default `includeSuper` parameter value
 	 *
-	 * @param clazz Class field of which should be returned
-	 * @param name  Field name
-	 * @return Field by name (or null)
+	 * @param clazz     Class field of which should be returned
+	 * @param condition Field condition
+	 * @return Field by condition (or null)
 	 * @see ReflectionUtils#setDefaultIncludeSuperClassFields(boolean)
 	 *
 	 */
-	public Field getField(@NonNull Class<?> clazz, @NonNull String name) {
-		return ReflectionUtils.getField(clazz, ReflectionUtils.getDefaultIncludeSuperClassFields(), name);
+	public Field getField(@NonNull Class<?> clazz, @NonNull FieldCondition condition) {
+		return ReflectionUtils.getField(clazz, ReflectionUtils.getDefaultIncludeSuperClassFields(), condition);
 	}
 
 	/**
@@ -684,30 +695,30 @@ public class ReflectionUtils {
 	}
 
 	/**
-	 * Get first field from specified class by name (may include super class fields). If field not found, throw exception
+	 * Get first field from specified class by condition (may include super class fields). If field not found, throw exception
 	 *
 	 * @param clazz        Class field of which should be returned
 	 * @param includeSuper true - if result should contain super class fields, otherwise - false
-	 * @param name         Field name
-	 * @return Field by name
+	 * @param condition    Field condition
+	 * @return Field by condition
 	 *
 	 */
 	@NonNull
-	public Field getFieldOrThrow(@NonNull Class<?> clazz, boolean includeSuper, @NonNull String name) {
-		return ReflectionUtils.getFieldOrThrow(clazz, includeSuper, (field) -> field.getName().equals(name));
+	public Field getFieldOrThrow(@NonNull Class<?> clazz, boolean includeSuper, @NonNull FieldCondition condition) {
+		return ReflectionUtils.getFieldOrThrow(clazz, includeSuper, condition.asPredicate());
 	}
 
 	/**
-	 * Get first field from specified class by name with default `includeSuper` parameter value. If field not found, throw exception
+	 * Get first field from specified class by condition with default `includeSuper` parameter value. If field not found, throw exception
 	 *
-	 * @param clazz Class field of which should be returned
-	 * @param name  Field name
-	 * @return Field by name
+	 * @param clazz     Class field of which should be returned
+	 * @param condition Field condition
+	 * @return Field by condition
 	 * @see ReflectionUtils#setDefaultIncludeSuperClassFields(boolean)
 	 */
 	@NonNull
-	public Field getFieldOrThrow(@NonNull Class<?> clazz, @NonNull String name) {
-		return ReflectionUtils.getFieldOrThrow(clazz, ReflectionUtils.getDefaultIncludeSuperClassFields(), name);
+	public Field getFieldOrThrow(@NonNull Class<?> clazz, @NonNull FieldCondition condition) {
+		return ReflectionUtils.getFieldOrThrow(clazz, ReflectionUtils.getDefaultIncludeSuperClassFields(), condition);
 	}
 
 	/**
