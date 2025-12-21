@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.ToString;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 
 @ToString(callSuper = true)
@@ -82,5 +83,11 @@ public final class FieldCondition extends ClassMemberCondition<Field> {
 	@Override
 	public FieldCondition withDeclaredClass(@NonNull Class<?> clazz) {
 		return (FieldCondition) super.withDeclaredClass(clazz);
+	}
+
+	@NonNull
+	@Override
+	public FieldCondition withAnnotation(@NonNull Class<? extends Annotation> annotation) {
+		return (FieldCondition) super.withAnnotation(annotation);
 	}
 }

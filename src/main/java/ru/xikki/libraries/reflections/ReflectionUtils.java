@@ -4,6 +4,7 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import ru.xikki.libraries.reflections.condition.FieldCondition;
+import ru.xikki.libraries.reflections.condition.MethodCondition;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
@@ -58,12 +59,24 @@ public class ReflectionUtils {
 			ReflectionUtils.resetClassAccessible(Unsafe.class);
 
 			ReflectionUtils.setClassAccessible(INTERNAL_UNSAFE.getClass());
-			OBJECT_FIELD_OFFSET_METHOD = ReflectionUtils.getMethodOrThrow(INTERNAL_UNSAFE.getClass(), false, (method) -> {
-				return method.getName().equals("objectFieldOffset") && method.getParameterCount() == 1;
-			});
-			STATIC_FIELD_OFFSET_METHOD = ReflectionUtils.getMethodOrThrow(INTERNAL_UNSAFE.getClass(), false, (method) -> {
-				return method.getName().equals("staticFieldOffset") && method.getParameterCount() == 1;
-			});
+			OBJECT_FIELD_OFFSET_METHOD = ReflectionUtils.getMethodOrThrow(
+					INTERNAL_UNSAFE.getClass(),
+					false,
+					MethodCondition.create()
+							.withName("objectFieldOffset")
+							.withStatic(false)
+							.withParametersCount(1)
+							.withParameter(0, Field.class)
+			);
+			STATIC_FIELD_OFFSET_METHOD = ReflectionUtils.getMethodOrThrow(
+					INTERNAL_UNSAFE.getClass(),
+					false,
+					MethodCondition.create()
+							.withName("staticFieldOffset")
+							.withStatic(false)
+							.withParametersCount(1)
+							.withParameter(0, Field.class)
+			);
 
 			OBJECT_FIELD_OFFSET_METHOD.setAccessible(true);
 			STATIC_FIELD_OFFSET_METHOD.setAccessible(true);
@@ -791,31 +804,31 @@ public class ReflectionUtils {
 	}
 
 	/**
-	 * Get specified class methods by name (may include super class methods)
+	 * Get specified class methods by condition (may include super class methods)
 	 *
 	 * @param clazz        Class methods of which should be returned
 	 * @param includeSuper true - if result should contain super class methods, otherwise - false
-	 * @param name         Method name
-	 * @return Array with methods by name
+	 * @param condition    Method condition
+	 * @return Array with methods by condition
 	 *
 	 */
 	@NonNull
-	public Method[] getMethods(@NonNull Class<?> clazz, boolean includeSuper, @NonNull String name) {
-		return ReflectionUtils.getMethods(clazz, includeSuper, (method) -> method.getName().equals(name));
+	public Method[] getMethods(@NonNull Class<?> clazz, boolean includeSuper, @NonNull MethodCondition condition) {
+		return ReflectionUtils.getMethods(clazz, includeSuper, condition.asPredicate());
 	}
 
 	/**
-	 * Get specified class methods by name with default `includeSuper` parameter value
+	 * Get specified class methods by condition with default `includeSuper` parameter value
 	 *
-	 * @param clazz Class methods of which should be returned
-	 * @param name  Method name
-	 * @return Array with methods by name
+	 * @param clazz     Class methods of which should be returned
+	 * @param condition Method condition
+	 * @return Array with methods by condition
 	 * @see ReflectionUtils#setDefaultIncludeSuperClassMethods(boolean)
 	 *
 	 */
 	@NonNull
-	public Method[] getMethods(@NonNull Class<?> clazz, @NonNull String name) {
-		return ReflectionUtils.getMethods(clazz, ReflectionUtils.getDefaultIncludeSuperClassMethods(), name);
+	public Method[] getMethods(@NonNull Class<?> clazz, @NonNull MethodCondition condition) {
+		return ReflectionUtils.getMethods(clazz, ReflectionUtils.getDefaultIncludeSuperClassMethods(), condition);
 	}
 
 	/**
@@ -847,31 +860,31 @@ public class ReflectionUtils {
 	}
 
 	/**
-	 * Get optional with first method from specified class by name (may include super class methods)
+	 * Get optional with first method from specified class by condition (may include super class methods)
 	 *
 	 * @param clazz        Class method of which should be returned
 	 * @param includeSuper true - if result should contain super class methods, otherwise - false
-	 * @param name         Method name
-	 * @return Optional with method by name
+	 * @param condition    Method condition
+	 * @return Optional with method by condition
 	 *
 	 */
 	@NonNull
-	public Optional<Method> getOptionalMethod(@NonNull Class<?> clazz, boolean includeSuper, @NonNull String name) {
-		return ReflectionUtils.getOptionalMethod(clazz, includeSuper, (method) -> method.getName().equals(name));
+	public Optional<Method> getOptionalMethod(@NonNull Class<?> clazz, boolean includeSuper, @NonNull MethodCondition condition) {
+		return ReflectionUtils.getOptionalMethod(clazz, includeSuper, condition.asPredicate());
 	}
 
 	/**
-	 * Get optional with first method from specified class by name with default `includeSuper` parameter value
+	 * Get optional with first method from specified class by condition with default `includeSuper` parameter value
 	 *
-	 * @param clazz Class method of which should be returned
-	 * @param name  Method name
-	 * @return Optional with method by name
+	 * @param clazz     Class method of which should be returned
+	 * @param condition Method condition
+	 * @return Optional with method by condition
 	 * @see ReflectionUtils#setDefaultIncludeSuperClassMethods(boolean)
 	 *
 	 */
 	@NonNull
-	public Optional<Method> getOptionalMethod(@NonNull Class<?> clazz, @NonNull String name) {
-		return ReflectionUtils.getOptionalMethod(clazz, ReflectionUtils.getDefaultIncludeSuperClassMethods(), name);
+	public Optional<Method> getOptionalMethod(@NonNull Class<?> clazz, @NonNull MethodCondition condition) {
+		return ReflectionUtils.getOptionalMethod(clazz, ReflectionUtils.getDefaultIncludeSuperClassMethods(), condition);
 	}
 
 	/**
@@ -901,29 +914,29 @@ public class ReflectionUtils {
 	}
 
 	/**
-	 * Get first method from specified class by name (may include super class methods)
+	 * Get first method from specified class by condition (may include super class methods)
 	 *
 	 * @param clazz        Class method of which should be returned
 	 * @param includeSuper true - if result should contain super class methods, otherwise - false
-	 * @param name         Method name
-	 * @return Method by name (or null)
+	 * @param condition    Method condition
+	 * @return Method by condition (or null)
 	 *
 	 */
-	public Method getMethod(@NonNull Class<?> clazz, boolean includeSuper, @NonNull String name) {
-		return ReflectionUtils.getMethod(clazz, includeSuper, (method) -> method.getName().equals(name));
+	public Method getMethod(@NonNull Class<?> clazz, boolean includeSuper, @NonNull MethodCondition condition) {
+		return ReflectionUtils.getMethod(clazz, includeSuper, condition.asPredicate());
 	}
 
 	/**
-	 * Get first method from specified class by name with default `includeSuper` parameter value
+	 * Get first method from specified class by condition with default `includeSuper` parameter value
 	 *
-	 * @param clazz Class method of which should be returned
-	 * @param name  Method name
-	 * @return Method by name (or null)
+	 * @param clazz     Class method of which should be returned
+	 * @param condition Method condition
+	 * @return Method by condition (or null)
 	 * @see ReflectionUtils#setDefaultIncludeSuperClassMethods(boolean)
 	 *
 	 */
-	public Method getMethod(@NonNull Class<?> clazz, @NonNull String name) {
-		return ReflectionUtils.getMethod(clazz, ReflectionUtils.getDefaultIncludeSuperClassMethods(), name);
+	public Method getMethod(@NonNull Class<?> clazz, @NonNull MethodCondition condition) {
+		return ReflectionUtils.getMethod(clazz, ReflectionUtils.getDefaultIncludeSuperClassMethods(), condition);
 	}
 
 	/**
@@ -954,30 +967,30 @@ public class ReflectionUtils {
 	}
 
 	/**
-	 * Get first method from specified class by name (may include super class methods). If method not found, throw exception
+	 * Get first method from specified class by condition (may include super class methods). If method not found, throw exception
 	 *
 	 * @param clazz        Class method of which should be returned
 	 * @param includeSuper true - if result should contain super class methods, otherwise - false
-	 * @param name         Method name
-	 * @return Method by name
+	 * @param condition    Method condition
+	 * @return Method by condition
 	 *
 	 */
 	@NonNull
-	public Method getMethodOrThrow(@NonNull Class<?> clazz, boolean includeSuper, @NonNull String name) {
-		return ReflectionUtils.getMethodOrThrow(clazz, includeSuper, (method) -> method.getName().equals(name));
+	public Method getMethodOrThrow(@NonNull Class<?> clazz, boolean includeSuper, @NonNull MethodCondition condition) {
+		return ReflectionUtils.getMethodOrThrow(clazz, includeSuper, condition.asPredicate());
 	}
 
 	/**
-	 * Get first method from specified class by name with default `includeSuper` parameter value. If method not found, throw exception
+	 * Get first method from specified class by condition with default `includeSuper` parameter value. If method not found, throw exception
 	 *
-	 * @param clazz Class method of which should be returned
-	 * @param name  Method name
-	 * @return Method by name
+	 * @param clazz     Class method of which should be returned
+	 * @param condition Method condition
+	 * @return Method by condition
 	 * @see ReflectionUtils#setDefaultIncludeSuperClassMethods(boolean)
 	 */
 	@NonNull
-	public Method getMethodOrThrow(@NonNull Class<?> clazz, @NonNull String name) {
-		return ReflectionUtils.getMethodOrThrow(clazz, ReflectionUtils.getDefaultIncludeSuperClassMethods(), name);
+	public Method getMethodOrThrow(@NonNull Class<?> clazz, @NonNull MethodCondition condition) {
+		return ReflectionUtils.getMethodOrThrow(clazz, ReflectionUtils.getDefaultIncludeSuperClassMethods(), condition);
 	}
 
 	/**

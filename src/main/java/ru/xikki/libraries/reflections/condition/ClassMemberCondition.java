@@ -2,6 +2,8 @@ package ru.xikki.libraries.reflections.condition;
 
 import lombok.*;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Member;
 import java.lang.reflect.Modifier;
 import java.util.function.Predicate;
@@ -9,9 +11,9 @@ import java.util.function.Predicate;
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public abstract class ClassMemberCondition<M extends Member> {
+public abstract class ClassMemberCondition<M extends AccessibleObject & Member> {
 
-	private Predicate<M> condition = (__) -> true;
+	protected Predicate<M> condition = (__) -> true;
 
 	/**
 	 * Add condition by member name
@@ -154,6 +156,18 @@ public abstract class ClassMemberCondition<M extends Member> {
 	@NonNull
 	public ClassMemberCondition<M> withDeclaredClass(@NonNull Class<?> clazz) {
 		this.condition = this.condition.and((member) -> member.getDeclaringClass() == clazz);
+		return this;
+	}
+
+	/**
+	 * Add condition by annotation on member
+	 *
+	 * @param annotation Annotation type
+	 *
+	 */
+	@NonNull
+	public ClassMemberCondition<M> withAnnotation(@NonNull Class<? extends Annotation> annotation) {
+		this.condition = condition.and((member) -> member.isAnnotationPresent(annotation));
 		return this;
 	}
 

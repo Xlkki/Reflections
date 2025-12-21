@@ -2,6 +2,7 @@ package ru.xikki.libraries.reflections;
 
 import org.junit.jupiter.api.Test;
 import ru.xikki.libraries.reflections.condition.FieldCondition;
+import ru.xikki.libraries.reflections.condition.MethodCondition;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -178,14 +179,22 @@ public class ReflectionUtilsTest {
 	@Test
 	public void getMethodsByConditionTest() throws NoSuchFieldException, NoSuchMethodException {
 		Method method = A.B.class.getDeclaredMethod("test");
-		Method method1 = ReflectionUtils.getMethod(A.B.class, "test");
+		Method method1 = ReflectionUtils.getMethod(
+				A.B.class,
+				MethodCondition.create()
+						.withName("test")
+		);
 
 		assert method.equals(method1);
 
 		method = A.class.getDeclaredMethod("test");
-		method1 = ReflectionUtils.getMethod(A.B.class, true, (someMethod) -> {
-			return someMethod.getName().equals("test") && someMethod.getDeclaringClass() == A.class;
-		});
+		method1 = ReflectionUtils.getMethod(
+				A.B.class,
+				true,
+				MethodCondition.create()
+						.withName("test")
+						.withDeclaredClass(A.class)
+		);
 
 		assert method.equals(method1);
 	}
