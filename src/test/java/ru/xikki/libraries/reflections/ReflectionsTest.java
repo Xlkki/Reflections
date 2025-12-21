@@ -3,7 +3,6 @@ package ru.xikki.libraries.reflections;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
-import java.util.Objects;
 
 public class ReflectionsTest {
 
@@ -21,10 +20,10 @@ public class ReflectionsTest {
 
 		Object instance = new ReflectionsTest();
 
-		assert  Reflections.getFieldValue(nonNullStaticField).equals("123");
-		assert  Reflections.getFieldValue(instance, nonNullNonStaticField).equals("123");
-		assert  Reflections.getFieldValue(nullableStaticField) == null;
-		assert  Reflections.getFieldValue(instance, nullableNonStaticField) == null;
+		assert Reflections.getFieldValue(nonNullStaticField).equals("123");
+		assert Reflections.getFieldValue(instance, nonNullNonStaticField).equals("123");
+		assert Reflections.getFieldValue(nullableStaticField) == null;
+		assert Reflections.getFieldValue(instance, nullableNonStaticField) == null;
 	}
 
 	@Test
@@ -69,6 +68,43 @@ public class ReflectionsTest {
 		} catch (Exception e) {
 
 		}
+	}
+
+	@Test
+	public void getFieldsTest() {
+		Field[] currentClassFields = Reflections.getFields(A.B.class);
+		Field[] superClassFields = Reflections.getFields(A.B.class, true);
+
+		assert currentClassFields.length == 1;
+		assert superClassFields.length == 2;
+	}
+
+	@Test
+	public void getFieldsByConditionTest() throws NoSuchFieldException {
+
+		Field field = A.B.class.getDeclaredField("a");
+		Field field1 = Reflections.getField(A.B.class, (someField) -> someField.getName().equals("a"));
+
+		assert field.equals(field1);
+
+		field = A.class.getDeclaredField("a");
+		field1 = Reflections.getField(A.B.class, true, (someField) -> {
+			return someField.getName().equals("a") && someField.getDeclaringClass() == A.class;
+		});
+
+		assert field.equals(field1);
+	}
+
+	static class A {
+
+		private static final int a = 1;
+
+		static class B extends A {
+
+			private static final int a = 2;
+
+		}
+
 	}
 
 }
