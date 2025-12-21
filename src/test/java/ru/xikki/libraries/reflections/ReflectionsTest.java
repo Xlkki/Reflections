@@ -12,4 +12,10 @@ public class ReflectionsTest {
 		Objects.requireNonNull(Reflections.getUnsafe());
 	}
 
+	@Test
+	public void allocateInstanceTest() throws InstantiationException {
+		Objects.requireNonNull(Reflections.getUnsafe());
+		Objects.requireNonNull(Reflections.allocateInstance(ReflectionsTest.class));
+	}
+
 }

@@ -43,4 +43,18 @@ public class Reflections {
 		Class.forName(clazz.getName(), true, clazz.getClassLoader());
 	}
 
+	/**
+	 * Create empty instance of specified class
+	 *
+	 * @param clazz Class instance of which should be created
+	 *
+	 * @return Instance of specified class
+	 *
+	 * @throws InstantiationException If specified class is interface or abstract
+	 * */
+	@NonNull
+	public <E> E allocateInstance(@NonNull Class<E> clazz) throws InstantiationException {
+		return (E) UNSAFE.allocateInstance(clazz);
+	}
+
 }
