@@ -28,22 +28,19 @@ public class ReflectionsTest {
 
 	@Test
 	public void setFieldValueTest() throws NoSuchFieldException {
-		Field nonNullStaticField = ReflectionsTest.class.getDeclaredField("nonNullStaticField");
-		Field nonNullNonStaticField = ReflectionsTest.class.getDeclaredField("nonNullNonStaticField");
-
 		Object instance = new ReflectionsTest();
 
-		assert Reflections.getFieldValue(nonNullStaticField).equals("123");
-		assert Reflections.getFieldValue(instance, nonNullNonStaticField).equals("123");
+		assert Reflections.getFieldValue(ReflectionsTest.class, "nonNullStaticField").equals("123");
+		assert Reflections.getFieldValue(instance, "nonNullNonStaticField").equals("123");
 
-		Reflections.setFieldValue(nonNullStaticField, "321");
-		Reflections.setFieldValue(instance, nonNullNonStaticField, "321");
+		Reflections.setFieldValue(ReflectionsTest.class, "nonNullStaticField", "321");
+		Reflections.setFieldValue(instance, "nonNullNonStaticField", "321");
 
-		assert Reflections.getFieldValue(nonNullStaticField).equals("321");
-		assert Reflections.getFieldValue(instance, nonNullNonStaticField).equals("321");
+		assert Reflections.getFieldValue(ReflectionsTest.class, "nonNullStaticField").equals("321");
+		assert Reflections.getFieldValue(instance, "nonNullNonStaticField").equals("321");
 
-		Reflections.setFieldValue(nonNullStaticField, "123");
-		Reflections.setFieldValue(instance, nonNullNonStaticField, "123");
+		Reflections.setFieldValue(ReflectionsTest.class, "nonNullStaticField", "123");
+		Reflections.setFieldValue(instance, "nonNullNonStaticField", "123");
 	}
 
 	@Test

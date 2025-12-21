@@ -124,7 +124,7 @@ public class Reflections {
 	 * Get static field value
 	 *
 	 * @param field Field value of which should be returned
-	 * @return Value of static method (maybe null)
+	 * @return Value of static field (maybe null)
 	 *
 	 */
 	public Object getFieldValue(@NonNull Field field) {
@@ -134,16 +134,75 @@ public class Reflections {
 		return Reflections.getFieldValue(field, base, offset);
 	}
 
-	//TODO add methods with optional and non-null
+	/**
+	 * Get static field value wrapped in optional
+	 *
+	 * @param field Field value of which should be returned
+	 * @return Optional with value of static field
+	 *
+	 */
+	@NonNull
+	public Optional<Object> getOptionalFieldValue(@NonNull Field field) {
+		return Optional.ofNullable(Reflections.getFieldValue(field));
+	}
 
-	//TODO add methods with field name
+	/**
+	 * Get static field value. If value is null - throw exception
+	 *
+	 * @param field Field value of which should be returned
+	 * @return Value of static field
+	 *
+	 */
+	@NonNull
+	public Object getFieldValueOrThrow(@NonNull Field field) {
+		return Reflections.getOptionalFieldValue(field)
+				.orElseThrow();
+	}
+
+	/**
+	 * Get static field value
+	 *
+	 * @param clazz Field declared class
+	 * @param name  Field name
+	 * @return Value of static field (maybe null)
+	 *
+	 */
+	public Object getFieldValue(@NonNull Class<?> clazz, @NonNull String name) {
+		return Reflections.getFieldValue(Reflections.getFieldOrThrow(clazz, name));
+	}
+
+	/**
+	 * Get static field value wrapped in optional
+	 *
+	 * @param clazz Field declared class
+	 * @param name  Field name
+	 * @return Optional with value of static field
+	 *
+	 */
+	@NonNull
+	public Optional<Object> getOptionalFieldValue(@NonNull Class<?> clazz, @NonNull String name) {
+		return Reflections.getOptionalFieldValue(Reflections.getFieldOrThrow(clazz, name));
+	}
+
+	/**
+	 * Get static field value. If value is null - throw exception
+	 *
+	 * @param clazz Field declared class
+	 * @param name  Field name
+	 * @return Value of static field
+	 *
+	 */
+	@NonNull
+	public Object getFieldValueOrThrow(@NonNull Class<?> clazz, @NonNull String name) {
+		return Reflections.getFieldValueOrThrow(Reflections.getFieldOrThrow(clazz, name));
+	}
 
 	/**
 	 * Get non-static field value
 	 *
 	 * @param instance Instance of field declared class
 	 * @param field    Field value of which should be returned
-	 * @return Value of non-static method (maybe null)
+	 * @return Value of non-static field (maybe null)
 	 *
 	 */
 	public Object getFieldValue(@NonNull Object instance, @NonNull Field field) {
@@ -152,9 +211,70 @@ public class Reflections {
 		return Reflections.getFieldValue(field, instance, offset);
 	}
 
-	//TODO add methods with optional and non-null
+	/**
+	 * Get non-static field value wrapped in optional
+	 *
+	 * @param instance Instance of field declared class
+	 * @param field    Field value of which should be returned
+	 * @return Optional with value of non-static field
+	 *
+	 */
+	@NonNull
+	public Optional<Object> getOptionalFieldValue(@NonNull Object instance, @NonNull Field field) {
+		return Optional.ofNullable(Reflections.getFieldValue(instance, field));
+	}
 
-	//TODO add methods with field name
+	/**
+	 * Get non-static field value. If value is null - throw exception
+	 *
+	 * @param instance Instance of field declared class
+	 * @param field    Field value of which should be returned
+	 * @return Value of non-static field
+	 *
+	 */
+	@NonNull
+	public Object getFieldValueOrThrow(@NonNull Object instance, @NonNull Field field) {
+		return Reflections.getOptionalFieldValue(instance, field)
+				.orElseThrow();
+	}
+
+	/**
+	 * Get non-static field value
+	 *
+	 * @param instance Instance of field declared class
+	 * @param name     Field name
+	 * @return Value of non-static field (maybe null)
+	 *
+	 */
+	public Object getFieldValue(@NonNull Object instance, @NonNull String name) {
+		return Reflections.getFieldValue(instance, Reflections.getFieldOrThrow(instance.getClass(), name));
+	}
+
+	/**
+	 * Get non-static field value wrapped in optional
+	 *
+	 * @param instance Instance of field declared class
+	 * @param name     Field name
+	 * @return Optional with value of non-static field
+	 *
+	 */
+	@NonNull
+	public Optional<Object> getOptionalFieldValue(@NonNull Object instance, @NonNull String name) {
+		return Reflections.getOptionalFieldValue(instance, Reflections.getFieldOrThrow(instance.getClass(), name));
+	}
+
+	/**
+	 * Get non-static field value. If value is null - throw exception
+	 *
+	 * @param instance Instance of field declared class
+	 * @param name     Field name
+	 * @return Value of non-static field
+	 *
+	 */
+	@NonNull
+	public Object getFieldValueOrThrow(@NonNull Object instance, @NonNull String name) {
+		return Reflections.getFieldValueOrThrow(instance, Reflections.getFieldOrThrow(instance.getClass(), name));
+	}
 
 	private Object getFieldValue(@NonNull Field field, @NonNull Object base, long offset) {
 		Class<?> type = field.getType();
@@ -186,13 +306,24 @@ public class Reflections {
 	 *
 	 * @param field Field value of which should be changed
 	 * @param value New field value (maybe null)
-	 *
 	 */
 	public void setFieldValue(@NonNull Field field, Object value) {
 		Reflections.initClass(field.getDeclaringClass());
 		Object base = UNSAFE.staticFieldBase(field);
 		long offset = Reflections.getStaticFieldOffset(field);
 		Reflections.setFieldValue(field, base, offset, value);
+	}
+
+	/**
+	 * Set static field value
+	 *
+	 * @param clazz Field declared class
+	 * @param name  Field name
+	 * @param value New field value (maybe null)
+	 *
+	 */
+	public void setFieldValue(@NonNull Class<?> clazz, @NonNull String name, Object value) {
+		Reflections.setFieldValue(Reflections.getFieldOrThrow(clazz, name), value);
 	}
 
 	/**
@@ -207,6 +338,19 @@ public class Reflections {
 		Reflections.initClass(field.getDeclaringClass());
 		long offset = Reflections.getObjectFieldOffset(field);
 		Reflections.setFieldValue(field, instance, offset, value);
+	}
+
+	/**
+	 * Set non-static field value
+	 *
+	 * @param instance Instance of field declared class
+	 * @param name     Field name
+	 * @param value    New field value (maybe null)
+	 *
+	 *
+	 */
+	public void setFieldValue(@NonNull Object instance, @NonNull String name, Object value) {
+		Reflections.setFieldValue(instance, Reflections.getFieldOrThrow(instance.getClass(), name), value);
 	}
 
 	private void setFieldValue(@NonNull Field field, @NonNull Object base, long offset, Object value) {
