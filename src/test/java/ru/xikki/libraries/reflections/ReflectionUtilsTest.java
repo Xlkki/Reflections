@@ -233,7 +233,7 @@ public class ReflectionUtilsTest {
 	}
 
 	@Test
-	public void createEnumTest() {
+	public void createEnumAndUpdateTest() {
 		assert TestEnum.values().length == 1;
 
 		TestEnum newValue = ReflectionUtils.createEnum(TestEnum.class, "B");
@@ -241,11 +241,25 @@ public class ReflectionUtilsTest {
 		assert newValue.ordinal() == 1;
 		assert newValue.name().equals("B");
 		assert TestEnum.values().length == 2;
+
+		ReflectionUtils.updateEnum(ReflectionUtilsTest.class.getClassLoader(), TestEnum.class);
+		assert UpdateEnumTest.test(newValue) == 2;
 	}
 
 	static enum TestEnum {
 
 		A;
+
+	}
+
+	static class UpdateEnumTest {
+
+		static int test(TestEnum testEnum) {
+			return switch (testEnum) {
+				case A -> 1;
+				default -> 2;
+			};
+		}
 
 	}
 

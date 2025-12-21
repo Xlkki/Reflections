@@ -1199,5 +1199,33 @@ public class ReflectionUtils {
 		return enumValue;
 	}
 
+	/**
+	 * Inject new enumeration values into all loaded classes in classloader
+	 *
+	 * @param loader    Class loader in which new enumeration values should be updated
+	 * @param enumClass Enumeration class which should be updated
+	 */
+	public <E extends Enum<E>> void updateEnum(@NonNull ClassLoader loader, @NonNull Class<E> enumClass) {
+		FieldCondition condition = FieldCondition.create()
+				.withName("$SwitchMap$" + enumClass.getName().replace(".", "$"))
+				.withStatic(true);
+		E[] values = ReflectionUtils.getValues(enumClass);
+		ReflectionUtils.getLoadedClasses(loader).stream()
+				.filter(Class::isSynthetic)
+				.map((syntheticClass) -> ReflectionUtils.getField(syntheticClass, condition))
+				.filter(Objects::nonNull)
+				.filter((field) -> field.getType().isArray())
+				.filter((field) -> field.getType().getComponentType() == int.class)
+				.forEach((field) -> {
+					int[] array = (int[]) ReflectionUtils.getFieldValue(field);
+					if (array == null) {
+						return;
+					}
+					int[] newArray = new int[values.length];
+					System.arraycopy(array, 0, newArray, 0, array.length);
+					ReflectionUtils.setFieldValue(field, newArray);
+				});
+	}
+
 
 }
