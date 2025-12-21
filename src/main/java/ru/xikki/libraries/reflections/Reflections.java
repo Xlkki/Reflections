@@ -7,17 +7,27 @@ import lombok.experimental.UtilityClass;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
 
 @UtilityClass
 public class Reflections {
 
 	private final Unsafe UNSAFE;
 
+	private final Field MODULE_FIELD;
+
+	private final Map<Class<?>, Module> DEFAULT_MODULES;
+
 	static {
 		try {
+			DEFAULT_MODULES = new HashMap<>();
+
 			Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
 			unsafeField.setAccessible(true);
 			UNSAFE = (Unsafe) unsafeField.get(null);
+
+			MODULE_FIELD = Class.class.getDeclaredField("module");
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -181,6 +191,33 @@ public class Reflections {
 		} else {
 			UNSAFE.putChar(base, offset, (char) value);
 		}
+	}
+
+	/**
+	 * Set class accessible (Allow to get access to java internal field and methods)
+	 *
+	 * @param clazz Class that should become available
+	 * */
+	public void setClassAccessible(@NonNull Class<?> clazz) {
+		if (DEFAULT_MODULES.containsKey(clazz)) {
+			return;
+		}
+		Module module = clazz.getModule();
+		DEFAULT_MODULES.put(clazz, module);
+		Reflections.setFieldValue(clazz, MODULE_FIELD, Reflections.class.getModule());
+	}
+
+	/**
+	 * Reset class accessibility to default
+	 *
+	 * @param clazz Class accessibility of which should be reset
+	 */
+	public void resetClassAccessible(@NonNull Class<?> clazz) {
+		Module defaultModule = DEFAULT_MODULES.remove(clazz);
+		if (defaultModule == null) {
+			return;
+		}
+		Reflections.setFieldValue(clazz, MODULE_FIELD, defaultModule);
 	}
 
 }
