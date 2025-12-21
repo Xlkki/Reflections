@@ -3,6 +3,7 @@ package ru.xikki.libraries.reflections;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 public class ReflectionsTest {
 
@@ -27,7 +28,7 @@ public class ReflectionsTest {
 	}
 
 	@Test
-	public void setFieldValueTest() throws NoSuchFieldException {
+	public void setFieldValueTest() {
 		Object instance = new ReflectionsTest();
 
 		assert Reflections.getFieldValue(ReflectionsTest.class, "nonNullStaticField").equals("123");
@@ -92,13 +93,45 @@ public class ReflectionsTest {
 		assert field.equals(field1);
 	}
 
+	@Test
+	public void getMethodsTest() {
+		Method[] currentClassMethods = Reflections.getMethods(A.B.class);
+		Method[] superClassMethods = Reflections.getMethods(A.B.class, true);
+
+		assert currentClassMethods.length == 1;
+		assert superClassMethods.length == 14;
+	}
+
+	@Test
+	public void getMethodsByConditionTest() throws NoSuchFieldException, NoSuchMethodException {
+		Method method = A.B.class.getDeclaredMethod("test");
+		Method method1 = Reflections.getMethod(A.B.class, "test");
+
+		assert method.equals(method1);
+
+		method = A.class.getDeclaredMethod("test");
+		method1 = Reflections.getMethod(A.B.class, true, (someMethod) -> {
+			return someMethod.getName().equals("test") && someMethod.getDeclaringClass() == A.class;
+		});
+
+		assert method.equals(method1);
+	}
+
 	static class A {
 
 		private static final int a = 1;
 
+		public static void test() {
+			System.out.println("A");
+		}
+
 		static class B extends A {
 
 			private static final int a = 2;
+
+			public static void test() {
+				System.out.println("B");
+			}
 
 		}
 
