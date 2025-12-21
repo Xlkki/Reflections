@@ -212,6 +212,12 @@ public class ReflectionUtilsTest {
 		);
 	}
 
+	@Test
+	public void getCallerClassTest() throws ClassNotFoundException {
+		Class<?> clazz = Class.forName("jdk.internal.reflect.DirectMethodHandleAccessor");
+		assert ReflectionUtils.getCallerClass() == clazz;
+	}
+
 	static record TestRecord(int a) {
 
 	}

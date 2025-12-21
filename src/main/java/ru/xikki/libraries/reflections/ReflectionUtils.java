@@ -1023,5 +1023,42 @@ public class ReflectionUtils {
 		return Path.of(new URI(path));
 	}
 
+	@NonNull
+	private String getCallerClassName0(int delta) {
+		Thread thread = Thread.currentThread();
+		StackTraceElement[] elements = thread.getStackTrace();
+		if (elements.length < 4 + delta) {
+			throw new IllegalArgumentException("Can not find caller class name");
+		}
+		return elements[3 + delta].getClassName();
+	}
+
+	/**
+	 * Get class name from which called your method that call that method (For example someone method from class `Main`
+	 * call the method `Test#test()` that called to that method and class `Main` should be returned by that method)
+	 *
+	 * @return Caller class name
+	 * @see ReflectionUtils#getCallerClass()
+	 *
+	 */
+	@NonNull
+	public String getCallerClassName() {
+		return ReflectionUtils.getCallerClassName0(1);
+	}
+
+	/**
+	 * Get class from which called your method that call that method (For example someone method from class `Main`
+	 * call the method `Test#test()` that called to that method and class `Main` should be returned by that method)
+	 *
+	 * @return Caller class
+	 * @see ReflectionUtils#getCallerClassName()
+	 *
+	 */
+	@NonNull
+	@SneakyThrows
+	public Class<?> getCallerClass() {
+		return Class.forName(ReflectionUtils.getCallerClassName0(1));
+	}
+
 
 }
