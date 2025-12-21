@@ -87,6 +87,10 @@ public class Reflections {
 		return Reflections.getFieldValue(field, base, offset);
 	}
 
+	//TODO add methods with optional and non-null
+
+	//TODO add methods with field name
+
 	/**
 	 * Get non-static field value
 	 *
@@ -100,6 +104,10 @@ public class Reflections {
 		long offset = Reflections.getObjectFieldOffset(field);
 		return Reflections.getFieldValue(field, instance, offset);
 	}
+
+	//TODO add methods with optional and non-null
+
+	//TODO add methods with field name
 
 	private Object getFieldValue(@NonNull Field field, @NonNull Object base, long offset) {
 		Class<?> type = field.getType();
@@ -123,6 +131,55 @@ public class Reflections {
 			return UNSAFE.getChar(base, offset);
 		} else {
 			throw new IllegalArgumentException("Can not get value of field with primary type %s".formatted(type.getSimpleName()));
+		}
+	}
+
+	/**
+	 * Set static field value
+	 *
+	 * @param field Field value of which should be changed
+	 * @param value New field value (maybe null)
+	 * */
+	public void setFieldValue(@NonNull Field field, Object value) {
+		Reflections.initClass(field.getDeclaringClass());
+		Object base = UNSAFE.staticFieldBase(field);
+		long offset = Reflections.getStaticFieldOffset(field);
+		Reflections.setFieldValue(field, base, offset, value);
+	}
+
+	/**
+	 * Set non-static field value
+	 *
+	 * @param instance Instance of field declared class
+	 * @param field Field value of which should be changed
+	 * @param value New field value (maybe null)
+	 * */
+	public void setFieldValue(@NonNull Object instance, @NonNull Field field, Object value) {
+		Reflections.initClass(field.getDeclaringClass());
+		long offset = Reflections.getObjectFieldOffset(field);
+		Reflections.setFieldValue(field, instance, offset, value);
+	}
+
+	private void setFieldValue(@NonNull Field field, @NonNull Object base, long offset, Object value) {
+		Class<?> type = field.getType();
+		if (!type.isPrimitive()) {
+			UNSAFE.putObject(base, offset, value);
+		} else if (type == boolean.class) {
+			UNSAFE.putBoolean(base, offset, (boolean) value);
+		} else if (type == byte.class) {
+			UNSAFE.putByte(base, offset, (byte) value);
+		} else if (type == short.class) {
+			UNSAFE.putShort(base, offset, (short) value);
+		} else if (type == int.class) {
+			UNSAFE.putInt(base, offset, (int) value);
+		} else if (type == long.class) {
+			UNSAFE.putLong(base, offset, (long) value);
+		} else if (type == float.class) {
+			UNSAFE.putFloat(base, offset, (float) value);
+		} else if (type == double.class) {
+			UNSAFE.putDouble(base, offset, (double) value);
+		} else {
+			UNSAFE.putChar(base, offset, (char) value);
 		}
 	}
 

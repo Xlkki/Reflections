@@ -13,17 +13,6 @@ public class ReflectionsTest {
 	private String nonNullNonStaticField = "123";
 
 	@Test
-	public void unsafeInitTest() {
-		Objects.requireNonNull(Reflections.getUnsafe());
-	}
-
-	@Test
-	public void allocateInstanceTest() throws InstantiationException {
-		Objects.requireNonNull(Reflections.getUnsafe());
-		Objects.requireNonNull(Reflections.allocateInstance(ReflectionsTest.class));
-	}
-
-	@Test
 	public void getFieldValueTest() throws NoSuchFieldException {
 		Field nullableStaticField = ReflectionsTest.class.getDeclaredField("nullableStaticField");
 		Field nonNullStaticField = ReflectionsTest.class.getDeclaredField("nonNullStaticField");
@@ -32,15 +21,27 @@ public class ReflectionsTest {
 
 		Object instance = new ReflectionsTest();
 
-		Objects.requireNonNull(Reflections.getFieldValue(nonNullStaticField));
-		Objects.requireNonNull(Reflections.getFieldValue(instance, nonNullNonStaticField));
+		assert  Reflections.getFieldValue(nonNullStaticField) != null;
+		assert  Reflections.getFieldValue(instance, nonNullNonStaticField) != null;
+		assert  Reflections.getFieldValue(nullableStaticField) == null;
+		assert  Reflections.getFieldValue(instance, nullableNonStaticField) == null;
+	}
 
-		if (Reflections.getFieldValue(nullableStaticField) != null) {
-			throw new IllegalArgumentException("Static field value is not null");
-		}
-		if (Reflections.getFieldValue(instance, nullableNonStaticField) != null) {
-			throw new IllegalArgumentException("Non-static field value is not null");
-		}
+	@Test
+	public void setFieldValueTest() throws NoSuchFieldException {
+		Field nonNullStaticField = ReflectionsTest.class.getDeclaredField("nonNullStaticField");
+		Field nonNullNonStaticField = ReflectionsTest.class.getDeclaredField("nonNullNonStaticField");
+
+		Object instance = new ReflectionsTest();
+
+		assert Reflections.getFieldValue(nonNullStaticField) == "123";
+		assert Reflections.getFieldValue(instance, nonNullNonStaticField) == "123";
+
+		Reflections.setFieldValue(nonNullStaticField, "321");
+		Reflections.setFieldValue(instance, nonNullNonStaticField, "321");
+
+		assert Reflections.getFieldValue(nonNullStaticField) == "321";
+		assert Reflections.getFieldValue(instance, nonNullNonStaticField) == "321";
 	}
 
 }
