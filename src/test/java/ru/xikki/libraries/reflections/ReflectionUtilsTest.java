@@ -3,10 +3,16 @@ package ru.xikki.libraries.reflections;
 import org.junit.jupiter.api.Test;
 import ru.xikki.libraries.reflections.condition.FieldCondition;
 import ru.xikki.libraries.reflections.condition.MethodCondition;
+import ru.xikki.libraries.reflections.iterator.DirectoryClassIterator;
+import ru.xikki.libraries.reflections.iterator.JarClassIterator;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Iterator;
+import java.util.jar.JarFile;
 
 public class ReflectionUtilsTest {
 
@@ -244,6 +250,24 @@ public class ReflectionUtilsTest {
 
 		ReflectionUtils.updateEnum(ReflectionUtilsTest.class.getClassLoader(), TestEnum.class);
 		assert UpdateEnumTest.test(newValue) == 2;
+	}
+
+	@Test
+	public void classIteratorTest() {
+		Path path = ReflectionUtils.getSourcePath();
+		Iterator<String> iterator;
+		if (Files.isDirectory(path)) {
+			iterator = new DirectoryClassIterator(path);
+			assert iterator.hasNext();
+		} else {
+			try (JarFile file = new JarFile(path.toFile())) {
+				iterator = new JarClassIterator(file);
+				assert iterator.hasNext();
+			} catch (IOException e) {
+
+			}
+		}
+
 	}
 
 	static enum TestEnum {

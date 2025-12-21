@@ -13,6 +13,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.jar.JarEntry;
 import java.util.stream.Stream;
 
 @UtilityClass
@@ -1059,6 +1060,17 @@ public class ReflectionUtils {
 		return Path.of(new URI(path));
 	}
 
+	/**
+	 * Get caller class file/directory path
+	 *
+	 * @return Source path of caller class
+	 *
+	 */
+	@NonNull
+	public Path getSourcePath() {
+		return ReflectionUtils.getSourcePath(ReflectionUtils.getCallerClass());
+	}
+
 	@NonNull
 	private String getCallerClassName0(int delta) {
 		Thread thread = Thread.currentThread();
@@ -1225,6 +1237,73 @@ public class ReflectionUtils {
 					System.arraycopy(array, 0, newArray, 0, array.length);
 					ReflectionUtils.setFieldValue(field, newArray);
 				});
+	}
+
+	/**
+	 * Check if specified jar entry is a class
+	 *
+	 * @param entry Jar entry
+	 * @return true if specified entry is a class, otherwise - false
+	 */
+	public boolean isClassEntry(@NonNull JarEntry entry) {
+		return ReflectionUtils.isClassFileName(entry.getName());
+	}
+
+	/**
+	 * Check if specified file path is a class file path
+	 *
+	 * @param filePath File path
+	 * @return true if file path is a class file path, otherwise - false
+	 */
+	public boolean isClassFilePath(@NonNull Path filePath) {
+		return ReflectionUtils.isClassFileName(filePath.toString());
+	}
+
+	/**
+	 * Check if specified file name is a class name
+	 *
+	 * @param fileName File name
+	 * @return true if file name is a class file name, otherwise - false
+	 */
+	public boolean isClassFileName(@NonNull String fileName) {
+		if (!fileName.endsWith(".class")) {
+			return false;
+		}
+		if (fileName.endsWith("module-info.class")) {
+			return false;
+		}
+		return !fileName.startsWith("META-INF");
+	}
+
+	/**
+	 * Convert jar entry into class name
+	 *
+	 * @param entry Jar entry
+	 * @return class name (for example: `ru.xikki.libraries.reflections.Reflections` from `ru/xikki/libraries/relfections/Reflections.class`)
+	 */
+	@NonNull
+	public String toClassName(@NonNull JarEntry entry) {
+		return ReflectionUtils.toClassName(entry.getName());
+	}
+
+	@NonNull
+	public String toClassName(@NonNull Path filePath) {
+		return ReflectionUtils.toClassName(filePath.toString());
+	}
+
+	/**
+	 * Convert class file name into class name
+	 *
+	 * @param fileName Class file name
+	 * @return Class name (for example: `ru.xikki.libraries.reflections.Reflections` from `ru/xikki/libraries/relfections/Reflections.class`)
+	 */
+	@NonNull
+	public String toClassName(@NonNull String fileName) {
+		if (!ReflectionUtils.isClassFileName(fileName)) {
+			throw new IllegalArgumentException("File name %s is not a class file name".formatted(fileName));
+		}
+		fileName = fileName.substring(0, fileName.lastIndexOf('.'));
+		return fileName.replace('/', '.');
 	}
 
 
