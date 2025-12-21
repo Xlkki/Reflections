@@ -83,7 +83,7 @@ public class ReflectionsTest {
 	public void getFieldsByConditionTest() throws NoSuchFieldException {
 
 		Field field = A.B.class.getDeclaredField("a");
-		Field field1 = Reflections.getField(A.B.class, (someField) -> someField.getName().equals("a"));
+		Field field1 = Reflections.getField(A.B.class, "a");
 
 		assert field.equals(field1);
 

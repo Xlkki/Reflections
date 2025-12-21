@@ -330,6 +330,34 @@ public class Reflections {
 	}
 
 	/**
+	 * Get specified class fields by name (may include super class fields)
+	 *
+	 * @param clazz        Class fields of which should be returned
+	 * @param includeSuper true - if result should contain super class fields, otherwise - false
+	 * @param name         Field name
+	 * @return Array with fields by name
+	 *
+	 */
+	@NonNull
+	public Field[] getFields(@NonNull Class<?> clazz, boolean includeSuper, @NonNull String name) {
+		return Reflections.getFields(clazz, includeSuper, (field) -> field.getName().equals(name));
+	}
+
+	/**
+	 * Get specified class fields by name with default `includeSuper` parameter value
+	 *
+	 * @param clazz Class fields of which should be returned
+	 * @param name  Field name
+	 * @return Array with fields by name
+	 * @see Reflections#setDefaultIncludeSuperClassFields(boolean)
+	 *
+	 */
+	@NonNull
+	public Field[] getFields(@NonNull Class<?> clazz, @NonNull String name) {
+		return Reflections.getFields(clazz, Reflections.getDefaultIncludeSuperClassFields(), name);
+	}
+
+	/**
 	 * Get optional with first field from specified class by condition (may include super class fields)
 	 *
 	 * @param clazz        Class field of which should be returned
@@ -355,6 +383,34 @@ public class Reflections {
 	@NonNull
 	public Optional<Field> getOptionalField(@NonNull Class<?> clazz, @NonNull Predicate<Field> condition) {
 		return Reflections.getOptionalField(clazz, Reflections.getDefaultIncludeSuperClassFields(), condition);
+	}
+
+	/**
+	 * Get optional with first field from specified class by name (may include super class fields)
+	 *
+	 * @param clazz        Class field of which should be returned
+	 * @param includeSuper true - if result should contain super class fields, otherwise - false
+	 * @param name         Field name
+	 * @return Optional with field by name
+	 *
+	 */
+	@NonNull
+	public Optional<Field> getOptionalField(@NonNull Class<?> clazz, boolean includeSuper, @NonNull String name) {
+		return Reflections.getOptionalField(clazz, includeSuper, (field) -> field.getName().equals(name));
+	}
+
+	/**
+	 * Get optional with first field from specified class by name with default `includeSuper` parameter value
+	 *
+	 * @param clazz Class field of which should be returned
+	 * @param name  Field name
+	 * @return Optional with field by name
+	 * @see Reflections#setDefaultIncludeSuperClassFields(boolean)
+	 *
+	 */
+	@NonNull
+	public Optional<Field> getOptionalField(@NonNull Class<?> clazz, @NonNull String name) {
+		return Reflections.getOptionalField(clazz, Reflections.getDefaultIncludeSuperClassFields(), name);
 	}
 
 	/**
@@ -384,6 +440,32 @@ public class Reflections {
 	}
 
 	/**
+	 * Get first field from specified class by name (may include super class fields)
+	 *
+	 * @param clazz        Class field of which should be returned
+	 * @param includeSuper true - if result should contain super class fields, otherwise - false
+	 * @param name         Field name
+	 * @return Field by name (or null)
+	 *
+	 */
+	public Field getField(@NonNull Class<?> clazz, boolean includeSuper, @NonNull String name) {
+		return Reflections.getField(clazz, includeSuper, (field) -> field.getName().equals(name));
+	}
+
+	/**
+	 * Get first field from specified class by name with default `includeSuper` parameter value
+	 *
+	 * @param clazz Class field of which should be returned
+	 * @param name  Field name
+	 * @return Field by name (or null)
+	 * @see Reflections#setDefaultIncludeSuperClassFields(boolean)
+	 *
+	 */
+	public Field getField(@NonNull Class<?> clazz, @NonNull String name) {
+		return Reflections.getField(clazz, Reflections.getDefaultIncludeSuperClassFields(), name);
+	}
+
+	/**
 	 * Get first field from specified class by condition (may include super class fields). If field not found, throw exception
 	 *
 	 * @param clazz        Class field of which should be returned
@@ -408,6 +490,33 @@ public class Reflections {
 	@NonNull
 	public Field getFieldOrThrow(@NonNull Class<?> clazz, @NonNull Predicate<Field> condition) {
 		return Reflections.getOptionalField(clazz, condition).orElseThrow();
+	}
+
+	/**
+	 * Get first field from specified class by name (may include super class fields). If field not found, throw exception
+	 *
+	 * @param clazz        Class field of which should be returned
+	 * @param includeSuper true - if result should contain super class fields, otherwise - false
+	 * @param name         Field name
+	 * @return Field by name
+	 *
+	 */
+	@NonNull
+	public Field getFieldOrThrow(@NonNull Class<?> clazz, boolean includeSuper, @NonNull String name) {
+		return Reflections.getFieldOrThrow(clazz, includeSuper, (field) -> field.getName().equals(name));
+	}
+
+	/**
+	 * Get first field from specified class by name with default `includeSuper` parameter value. If field not found, throw exception
+	 *
+	 * @param clazz Class field of which should be returned
+	 * @param name  Field name
+	 * @return Field by name
+	 * @see Reflections#setDefaultIncludeSuperClassFields(boolean)
+	 */
+	@NonNull
+	public Field getFieldOrThrow(@NonNull Class<?> clazz, @NonNull String name) {
+		return Reflections.getFieldOrThrow(clazz, Reflections.getDefaultIncludeSuperClassFields(), name);
 	}
 
 }
