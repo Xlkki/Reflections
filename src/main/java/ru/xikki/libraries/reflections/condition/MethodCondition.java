@@ -93,6 +93,18 @@ public final class MethodCondition extends ClassMemberCondition<Method> {
 	}
 
 	/**
+	 * Add condition by return type
+	 *
+	 * @param clazz Method return type
+	 *
+	 */
+	@NonNull
+	public MethodCondition withReturnType(@NonNull Class<?> clazz) {
+		this.condition = this.condition.and((method) -> method.getReturnType() == clazz);
+		return this;
+	}
+
+	/**
 	 * Add condition by parameters count
 	 *
 	 * @param parametersCount Parameters count

@@ -136,7 +136,8 @@ public interface IClassModifier {
 		 * Run all registered modifiers. <br>
 		 *
 		 * @see Holder#dump(ClassLoader) Dump modifiable classes
-		 * */
+		 *
+		 */
 		@NonNull
 		Holder modifyClasses();
 
@@ -145,7 +146,8 @@ public interface IClassModifier {
 		 *
 		 * @param loader Class loader
 		 * @see Holder#modifyClasses() Run all registered modifiers.<br>Call it before calling that method
-		 * */
+		 *
+		 */
 		@NonNull
 		Holder dump(@NonNull ClassLoader loader);
 

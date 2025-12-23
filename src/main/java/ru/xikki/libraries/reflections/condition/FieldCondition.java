@@ -90,4 +90,17 @@ public final class FieldCondition extends ClassMemberCondition<Field> {
 	public FieldCondition withAnnotation(@NonNull Class<? extends Annotation> annotation) {
 		return (FieldCondition) super.withAnnotation(annotation);
 	}
+
+	/**
+	 * Add condition by field type
+	 *
+	 * @param clazz Field type
+	 *
+	 */
+	@NonNull
+	public FieldCondition withType(@NonNull Class<?> clazz) {
+		this.condition = this.condition.and((field) -> field.getType() == clazz);
+		return this;
+	}
+
 }
