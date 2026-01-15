@@ -18,6 +18,8 @@ import java.util.function.Predicate;
 @UtilityClass
 public final class BCELUtils {
 
+	public final String INTERNAL_INSTANCES_FIELD_NAME = "$INTERNAL$INSTANCES";
+
 	/**
 	 * Get java class from BCEL type in specified class loader
 	 *
