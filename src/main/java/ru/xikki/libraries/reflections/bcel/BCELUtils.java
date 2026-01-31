@@ -3,6 +3,7 @@ package ru.xikki.libraries.reflections.bcel;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
+import org.apache.bcel.Constants;
 import org.apache.bcel.classfile.*;
 import org.apache.bcel.generic.*;
 import ru.xikki.libraries.reflections.ReflectionUtils;
@@ -10,15 +11,16 @@ import ru.xikki.libraries.reflections.condition.FieldCondition;
 import ru.xikki.libraries.reflections.condition.MethodCondition;
 
 import java.lang.annotation.Annotation;
+import java.lang.ref.SoftReference;
 import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 
 @UtilityClass
 public final class BCELUtils {
-
-	public final String INTERNAL_INSTANCES_FIELD_NAME = "$INTERNAL$INSTANCES";
 
 	/**
 	 * Get java class from BCEL type in specified class loader
@@ -666,6 +668,179 @@ public final class BCELUtils {
 	 */
 	public boolean hasAnnotatedNonStaticField(@NonNull JavaClass javaClass, @NonNull Class<? extends Annotation> annotationClass) {
 		return BCELUtils.hasAnnotatedNonStaticField(javaClass, BCELUtils.getAnnotationSignature(annotationClass));
+	}
+
+	/**
+	 * Inject internal instances field in BCEL class generator
+	 *
+	 * @param classGenerator BCEL class generator
+	 * @param fieldName      Internal instances field name
+	 * @return true if field is injected, otherwise - false
+	 */
+	public boolean injectInternalInstances(@NonNull ClassGen classGenerator, @NonNull String fieldName) {
+		String className = classGenerator.getClassName();
+		org.apache.bcel.classfile.Field existField = Arrays.stream(classGenerator.getFields())
+				.filter((field) -> field.getName().equals(fieldName))
+				.findFirst()
+				.orElse(null);
+		if (existField != null) {
+			return false;
+		}
+		FieldGen fieldGenerator = new FieldGen(
+				Constants.ACC_PUBLIC | Constants.ACC_STATIC | Constants.ACC_FINAL,
+				Type.getType(List.class),
+				fieldName,
+				classGenerator.getConstantPool()
+		);
+		classGenerator.addField(fieldGenerator.getField());
+
+		Method clinitMethod = Arrays.stream(classGenerator.getMethods())
+				.filter((checkMethod) -> checkMethod.getName().equals("<clinit>"))
+				.findFirst()
+				.orElse(null);
+		InstructionFactory factory = new InstructionFactory(classGenerator);
+		InstructionList newInstructions = new InstructionList();
+		newInstructions.append(
+				factory.createNew(
+						ObjectType.getInstance(LinkedList.class.getName())
+				)
+		);
+		newInstructions.append(new DUP());
+		newInstructions.append(
+				factory.createInvoke(
+						LinkedList.class.getName(),
+						"<init>",
+						Type.VOID,
+						new Type[]{},
+						Constants.INVOKESPECIAL
+				)
+		);
+		newInstructions.append(
+				factory.createPutStatic(
+						className,
+						fieldName,
+						Type.getType(List.class)
+				)
+		);
+
+		if (clinitMethod == null) {
+			newInstructions.append(new RETURN());
+			MethodGen methodGenerator = new MethodGen(
+					Constants.ACC_PUBLIC | Constants.ACC_STATIC | Constants.ACC_FINAL,
+					Type.VOID,
+					new Type[]{},
+					new String[]{},
+					"<clinit>",
+					className,
+					newInstructions,
+					classGenerator.getConstantPool()
+			);
+			classGenerator.addMethod(methodGenerator.getMethod());
+		} else {
+			MethodGen clinitMethodGenerator = new MethodGen(clinitMethod, className, classGenerator.getConstantPool());
+			InstructionList oldInstructions = clinitMethodGenerator.getInstructionList();
+			BCELUtils.injectInstructionsToEnd(oldInstructions, newInstructions);
+			oldInstructions.setPositions();
+			clinitMethodGenerator.setInstructionList(oldInstructions);
+			clinitMethodGenerator.setMaxLocals();
+			clinitMethodGenerator.setMaxStack();
+			classGenerator.replaceMethod(clinitMethod, clinitMethodGenerator.getMethod());
+		}
+
+		for (Method initMethod : classGenerator.getMethods()) {
+			if (!initMethod.getName().equals("<init>")) {
+				continue;
+			}
+			MethodGen initMethodGenerator = new MethodGen(initMethod, className, classGenerator.getConstantPool());
+			if (BCELUtils.hasClassInitCalling(initMethodGenerator, classGenerator.getConstantPool(), classGenerator)) {
+				continue;
+			}
+			InstructionList oldInstructions = initMethodGenerator.getInstructionList();
+			newInstructions = new InstructionList();
+			newInstructions.append(
+					factory.createNew(
+							SoftReference.class.getName()
+					)
+			);
+			newInstructions.append(new DUP());
+			newInstructions.append(new ALOAD(0));
+			newInstructions.append(
+					factory.createInvoke(
+							SoftReference.class.getName(),
+							"<init>",
+							Type.VOID,
+							new Type[]{Type.OBJECT},
+							Constants.INVOKESPECIAL
+					)
+			);
+			newInstructions.append(new ASTORE(initMethodGenerator.getMaxLocals()));
+			newInstructions.append(
+					factory.createGetStatic(
+							className,
+							fieldName,
+							Type.getType(List.class)
+					)
+			);
+			newInstructions.append(new ALOAD(initMethodGenerator.getMaxLocals()));
+			newInstructions.append(
+					factory.createInvoke(
+							List.class.getName(),
+							"add",
+							Type.BOOLEAN,
+							new Type[]{Type.OBJECT},
+							Constants.INVOKEINTERFACE
+					)
+			);
+			BCELUtils.injectInstructionsToEnd(oldInstructions, newInstructions);
+			oldInstructions.setPositions();
+			initMethodGenerator.setInstructionList(oldInstructions);
+			initMethodGenerator.setMaxLocals();
+			initMethodGenerator.setMaxStack();
+			classGenerator.replaceMethod(initMethod, initMethodGenerator.getMethod());
+		}
+		return true;
+	}
+
+	/**
+	 * Inject instructions list into the end of other instructions list
+	 *
+	 * @param instructions    Original instructions
+	 * @param newInstructions New instructions which should be injected to original instructions
+	 * @return true if instructions is injected, otherwise - false
+	 */
+	public boolean injectInstructionsToEnd(@NonNull InstructionList instructions, @NonNull InstructionList newInstructions) {
+		if (newInstructions.isEmpty()) {
+			return false;
+		}
+		List<InstructionHandle> handles = Arrays.stream(instructions.getInstructionHandles())
+				.filter((otherHandle) -> otherHandle.getInstruction() instanceof ReturnInstruction)
+				.toList();
+		for (InstructionHandle handle : handles) {
+			InstructionList newInstructionsCopy = newInstructions.copy();
+			BCELUtils.redirectBranchInstructions(newInstructions, null, handle);
+			InstructionHandle newTarget = instructions.insert(handle, newInstructions);
+			BCELUtils.redirectBranchInstructions(instructions, handle, newTarget);
+			newInstructions = newInstructionsCopy;
+		}
+		instructions.setPositions();
+		return true;
+	}
+
+	/**
+	 * Redirecting all branch instructions from one to other target
+	 *
+	 * @param instructions Instruction list
+	 * @param oldTarget    Old branch instruction target
+	 * @param newTarget    New branch instruction target
+	 */
+	public void redirectBranchInstructions(@NonNull InstructionList instructions, InstructionHandle oldTarget, InstructionHandle newTarget) {
+		instructions.forEach((handle) -> {
+			if (handle.getInstruction() instanceof BranchInstruction branchInstruction) {
+				if (branchInstruction.getTarget() == oldTarget) {
+					branchInstruction.setTarget(newTarget);
+				}
+			}
+		});
 	}
 
 

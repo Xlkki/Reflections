@@ -14,7 +14,7 @@ import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.jar.JarFile;
 
-public class ReflectionUtilsTest {
+public class ReflectionUtilsTests {
 
 	private static String nullableStaticField;
 	private static String nonNullStaticField = "123";
@@ -23,12 +23,12 @@ public class ReflectionUtilsTest {
 
 	@Test
 	public void getFieldValueTest() throws NoSuchFieldException {
-		Field nullableStaticField = ReflectionUtilsTest.class.getDeclaredField("nullableStaticField");
-		Field nonNullStaticField = ReflectionUtilsTest.class.getDeclaredField("nonNullStaticField");
-		Field nullableNonStaticField = ReflectionUtilsTest.class.getDeclaredField("nullableNonStaticField");
-		Field nonNullNonStaticField = ReflectionUtilsTest.class.getDeclaredField("nonNullNonStaticField");
+		Field nullableStaticField = ReflectionUtilsTests.class.getDeclaredField("nullableStaticField");
+		Field nonNullStaticField = ReflectionUtilsTests.class.getDeclaredField("nonNullStaticField");
+		Field nullableNonStaticField = ReflectionUtilsTests.class.getDeclaredField("nullableNonStaticField");
+		Field nonNullNonStaticField = ReflectionUtilsTests.class.getDeclaredField("nonNullNonStaticField");
 
-		Object instance = new ReflectionUtilsTest();
+		Object instance = new ReflectionUtilsTests();
 
 		assert ReflectionUtils.getFieldValue(nonNullStaticField).equals("123");
 		assert ReflectionUtils.getFieldValue(instance, nonNullNonStaticField).equals("123");
@@ -38,10 +38,10 @@ public class ReflectionUtilsTest {
 
 	@Test
 	public void setFieldValueTest() {
-		Object instance = new ReflectionUtilsTest();
+		Object instance = new ReflectionUtilsTests();
 
 		assert ReflectionUtils.getFieldValue(
-				ReflectionUtilsTest.class,
+				ReflectionUtilsTests.class,
 				FieldCondition.create()
 						.withName("nonNullStaticField")
 		).equals("123");
@@ -52,7 +52,7 @@ public class ReflectionUtilsTest {
 		).equals("123");
 
 		ReflectionUtils.setFieldValue(
-				ReflectionUtilsTest.class,
+				ReflectionUtilsTests.class,
 				FieldCondition.create()
 						.withName("nonNullStaticField"),
 				"321"
@@ -65,7 +65,7 @@ public class ReflectionUtilsTest {
 		);
 
 		assert ReflectionUtils.getFieldValue(
-				ReflectionUtilsTest.class,
+				ReflectionUtilsTests.class,
 				FieldCondition.create()
 						.withName("nonNullStaticField")
 		).equals("321");
@@ -75,7 +75,7 @@ public class ReflectionUtilsTest {
 		).equals("321");
 
 		ReflectionUtils.setFieldValue(
-				ReflectionUtilsTest.class,
+				ReflectionUtilsTests.class,
 				FieldCondition.create()
 						.withName("nonNullStaticField"),
 				"123"
@@ -208,12 +208,12 @@ public class ReflectionUtilsTest {
 
 	@Test
 	public void getLoadedClassesTest() {
-		assert !ReflectionUtils.getLoadedClasses(ReflectionUtilsTest.class.getClassLoader()).isEmpty();
+		assert !ReflectionUtils.getLoadedClasses(ReflectionUtilsTests.class.getClassLoader()).isEmpty();
 	}
 
 	@Test
 	public void getSourcePathTest() {
-		assert ReflectionUtils.getSourcePath(ReflectionUtilsTest.class).equals(
+		assert ReflectionUtils.getSourcePath(ReflectionUtilsTests.class).equals(
 				Path.of("build\\classes\\java\\test").toAbsolutePath()
 		);
 	}
@@ -248,7 +248,7 @@ public class ReflectionUtilsTest {
 		assert newValue.name().equals("B");
 		assert TestEnum.values().length == 2;
 
-		ReflectionUtils.updateEnum(ReflectionUtilsTest.class.getClassLoader(), TestEnum.class);
+		ReflectionUtils.updateEnum(ReflectionUtilsTests.class.getClassLoader(), TestEnum.class);
 		assert UpdateEnumTest.test(newValue) == 2;
 	}
 

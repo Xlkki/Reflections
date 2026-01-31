@@ -7,6 +7,7 @@ import ru.xikki.libraries.reflections.condition.FieldCondition;
 import ru.xikki.libraries.reflections.condition.MethodCondition;
 import sun.misc.Unsafe;
 
+import java.lang.ref.SoftReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URI;
@@ -34,6 +35,8 @@ public class ReflectionUtils {
 
 	private boolean defaultIncludeSuperClassFields = false;
 	private boolean defaultIncludeSuperClassMethods = false;
+
+	private final String INTERNAL_INSTANCES_FIELD_NAME = "$INTERNAL$INSTANCES";
 
 	static {
 		try {
@@ -760,6 +763,91 @@ public class ReflectionUtils {
 	}
 
 	/**
+	 * Get internal instances field by name
+	 * @param clazz Class field from which should be returned
+	 * @param name Name of instances field
+	 *
+	 * @return Field with class instances or null
+	 * */
+	public Field getInstancesField(@NonNull Class<?> clazz, @NonNull String name) {
+		return ReflectionUtils.getField(
+				clazz,
+				FieldCondition.create()
+						.withName(name)
+						.withStatic(true)
+						.withType(List.class)
+		);
+	}
+
+	/**
+	 * Get internal instances field by name wrapped in optional
+	 * @param clazz Class field from which should be returned
+	 * @param name Name of instances field
+	 *
+	 * @return Optional with field with class instances
+	 * */
+	@NonNull
+	public Optional<Field> getOptionalInstancesField(@NonNull Class<?> clazz, @NonNull String name) {
+		return ReflectionUtils.getOptionalField(
+				clazz,
+				FieldCondition.create()
+						.withName(name)
+						.withStatic(true)
+						.withType(List.class)
+		);
+	}
+
+	/**
+	 * Get internal instances field by name (or throw if field does not exist)
+	 * @param clazz Class field from which should be returned
+	 * @param name Name of instances field
+	 *
+	 * @return Field with class instances
+	 * */
+	@NonNull
+	public Field getInstancesFieldOrThrow(@NonNull Class<?> clazz, @NonNull String name) {
+		return ReflectionUtils.getFieldOrThrow(
+				clazz,
+				FieldCondition.create()
+						.withName(name)
+						.withStatic(true)
+						.withType(List.class)
+		);
+	}
+
+	/**
+	 * Get internal instances field with default name
+	 * @param clazz Class field from which should be returned
+	 *
+	 * @return Field with class instances or null
+	 * */
+	public Field getInstancesField(@NonNull Class<?> clazz) {
+		return ReflectionUtils.getInstancesField(clazz, INTERNAL_INSTANCES_FIELD_NAME);
+	}
+
+	/**
+	 * Get internal instances field wrapped in optional
+	 * @param clazz Class field from which should be returned
+	 *
+	 * @return Optional with field with class instances
+	 * */
+	@NonNull
+	public Optional<Field> getOptionalInstancesField(@NonNull Class<?> clazz) {
+		return ReflectionUtils.getOptionalInstancesField(clazz, INTERNAL_INSTANCES_FIELD_NAME);
+	}
+
+	/**
+	 * Get internal instances field (or throw if field does not exist)
+	 * @param clazz Class field from which should be returned
+	 *
+	 * @return Field with class instances
+	 * */
+	@NonNull
+	public Field getInstancesFieldOrThrow(@NonNull Class<?> clazz) {
+		return ReflectionUtils.getInstancesFieldOrThrow(clazz, INTERNAL_INSTANCES_FIELD_NAME);
+	}
+
+	/**
 	 * Get enumeration `$VALUES` field
 	 *
 	 * @param clazz Enumeration class
@@ -1304,6 +1392,31 @@ public class ReflectionUtils {
 		}
 		fileName = fileName.substring(0, fileName.lastIndexOf('.'));
 		return fileName.replace('/', '.');
+	}
+
+	/**
+	 * Get class instances
+	 * @param clazz Class instances of which should be returned
+	 * @param name Instances field name
+	 *
+	 * @return List with instances of specified class
+	 * */
+	@NonNull
+	public <E> List<SoftReference<E>> getInstances(@NonNull Class<E> clazz, @NonNull String name) {
+		return (List<SoftReference<E>>) ReflectionUtils.getOptionalInstancesField(clazz, name)
+				.map(ReflectionUtils::getFieldValueOrThrow)
+				.orElse(Collections.emptyList());
+	}
+
+	/**
+	 * Get class instances
+	 * @param clazz Class instances of which should be returned
+	 *
+	 * @return List with instances of specified class
+	 * */
+	@NonNull
+	public <E> List<SoftReference<E>> getInstances(@NonNull Class<E> clazz) {
+		return ReflectionUtils.getInstances(clazz, INTERNAL_INSTANCES_FIELD_NAME);
 	}
 
 
