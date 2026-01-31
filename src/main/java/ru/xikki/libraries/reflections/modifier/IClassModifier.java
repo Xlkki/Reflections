@@ -15,7 +15,6 @@ import java.util.List;
  * <b>Modificable class shouldn't be loaded at runtime</b>
  *
  * @see IClassScanner implementation of IClassModifier$Holder in which you can register modifiers and modify classes
- * @see IClassScanner
  */
 public interface IClassModifier {
 
