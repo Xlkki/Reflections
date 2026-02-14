@@ -12,7 +12,7 @@ public interface IClassProcessor {
 	/**
 	 * Check if specified class should be processed by name
 	 *
-	 * @param holder   Class processor holder in which processed class founded
+	 * @param holder    Class processor holder in which processed class founded
 	 * @param className Class name
 	 * @return True if specified class should be processed, otherwise - false
 	 */
@@ -21,7 +21,7 @@ public interface IClassProcessor {
 	/**
 	 * Check if specified class should be processed
 	 *
-	 * @param holder   Class processor holder in which processed class founded
+	 * @param holder    Class processor holder in which processed class founded
 	 * @param javaClass Class to process
 	 * @return True if specified class should be processed, otherwise - false
 	 */
@@ -30,7 +30,7 @@ public interface IClassProcessor {
 	/**
 	 * Check if specified class should be loaded
 	 *
-	 * @param holder   Class processor holder in which processed class founded
+	 * @param holder    Class processor holder in which processed class founded
 	 * @param javaClass Class to load
 	 * @return True if specified class should be loaded, otherwise - false
 	 */
@@ -39,7 +39,7 @@ public interface IClassProcessor {
 	/**
 	 * Check if instance of specified class should be created
 	 *
-	 * @param holder   Class processor holder in which processed class founded
+	 * @param holder    Class processor holder in which processed class founded
 	 * @param javaClass Class to create instance
 	 * @return True if instance of specified class should be created, otherwise - false
 	 */
@@ -48,7 +48,7 @@ public interface IClassProcessor {
 	/**
 	 * Process class instance
 	 *
-	 * @param holder  Class processor holder in which processed class founded
+	 * @param holder   Class processor holder in which processed class founded
 	 * @param instance Processed class instance
 	 */
 	void processInstance(@NonNull IClassProcessor.Holder holder, @NonNull Object instance);
@@ -57,14 +57,14 @@ public interface IClassProcessor {
 	 * Process loaded class
 	 *
 	 * @param holder Class processor holder in which processed class founded
-	 * @param clazz   Processed class
+	 * @param clazz  Processed class
 	 */
 	void processClass(@NonNull IClassProcessor.Holder holder, @NonNull Class<?> clazz);
 
 	/**
 	 * Process class
 	 *
-	 * @param holder   Class processor holder in which processed class founded
+	 * @param holder    Class processor holder in which processed class founded
 	 * @param javaClass Processed class
 	 */
 	void processClass(@NonNull IClassProcessor.Holder holder, @NonNull JavaClass javaClass);

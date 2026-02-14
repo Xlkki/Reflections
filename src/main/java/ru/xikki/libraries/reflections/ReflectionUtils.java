@@ -764,11 +764,12 @@ public class ReflectionUtils {
 
 	/**
 	 * Get internal instances field by name
-	 * @param clazz Class field from which should be returned
-	 * @param name Name of instances field
 	 *
+	 * @param clazz Class field from which should be returned
+	 * @param name  Name of instances field
 	 * @return Field with class instances or null
-	 * */
+	 *
+	 */
 	public Field getInstancesField(@NonNull Class<?> clazz, @NonNull String name) {
 		return ReflectionUtils.getField(
 				clazz,
@@ -781,11 +782,12 @@ public class ReflectionUtils {
 
 	/**
 	 * Get internal instances field by name wrapped in optional
-	 * @param clazz Class field from which should be returned
-	 * @param name Name of instances field
 	 *
+	 * @param clazz Class field from which should be returned
+	 * @param name  Name of instances field
 	 * @return Optional with field with class instances
-	 * */
+	 *
+	 */
 	@NonNull
 	public Optional<Field> getOptionalInstancesField(@NonNull Class<?> clazz, @NonNull String name) {
 		return ReflectionUtils.getOptionalField(
@@ -799,11 +801,12 @@ public class ReflectionUtils {
 
 	/**
 	 * Get internal instances field by name (or throw if field does not exist)
-	 * @param clazz Class field from which should be returned
-	 * @param name Name of instances field
 	 *
+	 * @param clazz Class field from which should be returned
+	 * @param name  Name of instances field
 	 * @return Field with class instances
-	 * */
+	 *
+	 */
 	@NonNull
 	public Field getInstancesFieldOrThrow(@NonNull Class<?> clazz, @NonNull String name) {
 		return ReflectionUtils.getFieldOrThrow(
@@ -817,20 +820,22 @@ public class ReflectionUtils {
 
 	/**
 	 * Get internal instances field with default name
-	 * @param clazz Class field from which should be returned
 	 *
+	 * @param clazz Class field from which should be returned
 	 * @return Field with class instances or null
-	 * */
+	 *
+	 */
 	public Field getInstancesField(@NonNull Class<?> clazz) {
 		return ReflectionUtils.getInstancesField(clazz, INTERNAL_INSTANCES_FIELD_NAME);
 	}
 
 	/**
 	 * Get internal instances field wrapped in optional
-	 * @param clazz Class field from which should be returned
 	 *
+	 * @param clazz Class field from which should be returned
 	 * @return Optional with field with class instances
-	 * */
+	 *
+	 */
 	@NonNull
 	public Optional<Field> getOptionalInstancesField(@NonNull Class<?> clazz) {
 		return ReflectionUtils.getOptionalInstancesField(clazz, INTERNAL_INSTANCES_FIELD_NAME);
@@ -838,10 +843,11 @@ public class ReflectionUtils {
 
 	/**
 	 * Get internal instances field (or throw if field does not exist)
-	 * @param clazz Class field from which should be returned
 	 *
+	 * @param clazz Class field from which should be returned
 	 * @return Field with class instances
-	 * */
+	 *
+	 */
 	@NonNull
 	public Field getInstancesFieldOrThrow(@NonNull Class<?> clazz) {
 		return ReflectionUtils.getInstancesFieldOrThrow(clazz, INTERNAL_INSTANCES_FIELD_NAME);
@@ -1396,11 +1402,12 @@ public class ReflectionUtils {
 
 	/**
 	 * Get class instances
-	 * @param clazz Class instances of which should be returned
-	 * @param name Instances field name
 	 *
+	 * @param clazz Class instances of which should be returned
+	 * @param name  Instances field name
 	 * @return List with instances of specified class
-	 * */
+	 *
+	 */
 	@NonNull
 	public <E> List<SoftReference<E>> getInstances(@NonNull Class<E> clazz, @NonNull String name) {
 		return (List<SoftReference<E>>) ReflectionUtils.getOptionalInstancesField(clazz, name)
@@ -1410,10 +1417,11 @@ public class ReflectionUtils {
 
 	/**
 	 * Get class instances
-	 * @param clazz Class instances of which should be returned
 	 *
+	 * @param clazz Class instances of which should be returned
 	 * @return List with instances of specified class
-	 * */
+	 *
+	 */
 	@NonNull
 	public <E> List<SoftReference<E>> getInstances(@NonNull Class<E> clazz) {
 		return ReflectionUtils.getInstances(clazz, INTERNAL_INSTANCES_FIELD_NAME);
