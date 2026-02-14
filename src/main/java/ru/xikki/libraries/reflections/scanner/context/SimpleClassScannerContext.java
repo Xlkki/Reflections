@@ -4,9 +4,7 @@ import lombok.NonNull;
 
 import java.util.*;
 
-final class SimpleClassScannerContext implements IClassScannerContext {
-
-	private final Map<String, List<Object>> entities;
+record SimpleClassScannerContext(Map<String, List<Object>> entities) implements IClassScannerContext {
 
 	SimpleClassScannerContext(@NonNull Map<String, List<Object>> entities) {
 		this.entities = new HashMap<>(entities);

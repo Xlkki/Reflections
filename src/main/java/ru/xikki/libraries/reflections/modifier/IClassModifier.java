@@ -3,6 +3,7 @@ package ru.xikki.libraries.reflections.modifier;
 import lombok.NonNull;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.generic.ClassGen;
+import ru.xikki.libraries.reflections.scanner.IClassScanner;
 
 import java.util.Arrays;
 import java.util.Collection;

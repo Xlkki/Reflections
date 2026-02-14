@@ -91,12 +91,19 @@ public interface IClassScannerContext {
 
 	@NonNull
 	static IClassScannerContext create(@NonNull Map<String, List<Object>> entities) {
-		return ClassScannerContextProvider.getFactory().apply(entities);
+		return ClassScannerContextProvider.getFactory().create(entities);
 	}
 
 	@NonNull
 	static IClassScannerContext create() {
 		return IClassScannerContext.create(Collections.emptyMap());
+	}
+
+	interface Factory {
+
+		@NonNull
+		IClassScannerContext create(@NonNull Map<String, List<Object>> entities);
+
 	}
 
 }
