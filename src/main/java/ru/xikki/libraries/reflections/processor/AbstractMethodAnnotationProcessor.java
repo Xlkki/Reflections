@@ -9,19 +9,19 @@ import java.util.function.Predicate;
 
 public abstract class AbstractMethodAnnotationProcessor implements IClassProcessor {
 
-	private final Predicate<String> classNamePredicator;
+	private final Predicate<String> classNameFilter;
 	private final String expectedClassAnnotationSignature;
 	private final String methodAnnotationSignature;
 
-	protected AbstractMethodAnnotationProcessor(Predicate<String> classNamePredicator, Class<? extends Annotation> expectedClassAnnotation, @NonNull Class<? extends Annotation> methodAnnotation) {
-		this.classNamePredicator = classNamePredicator;
+	protected AbstractMethodAnnotationProcessor(Predicate<String> classNameFilter, Class<? extends Annotation> expectedClassAnnotation, @NonNull Class<? extends Annotation> methodAnnotation) {
+		this.classNameFilter = classNameFilter;
 		this.expectedClassAnnotationSignature = expectedClassAnnotation == null ? null : BCELUtils.getAnnotationSignature(expectedClassAnnotation);
 		this.methodAnnotationSignature = BCELUtils.getAnnotationSignature(methodAnnotation);
 	}
 
 	@Override
 	public boolean shouldProcess(@NonNull IClassProcessor.Holder holder, @NonNull String className) {
-		return this.classNamePredicator == null || this.classNamePredicator.test(className);
+		return this.classNameFilter == null || this.classNameFilter.test(className);
 	}
 
 	@Override

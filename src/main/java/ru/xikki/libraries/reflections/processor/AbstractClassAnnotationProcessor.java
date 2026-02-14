@@ -9,17 +9,17 @@ import java.util.function.Predicate;
 
 public abstract class AbstractClassAnnotationProcessor implements IClassProcessor {
 
-	private final Predicate<String> classNamePredicator;
+	private final Predicate<String> classNameFilter;
 	private final String classAnnotationSignature;
 
-	protected AbstractClassAnnotationProcessor(Predicate<String> classNamePredicator, @NonNull Class<? extends Annotation> classAnnotation) {
-		this.classNamePredicator = classNamePredicator;
+	protected AbstractClassAnnotationProcessor(Predicate<String> classNameFilter, @NonNull Class<? extends Annotation> classAnnotation) {
+		this.classNameFilter = classNameFilter;
 		this.classAnnotationSignature = BCELUtils.getAnnotationSignature(classAnnotation);
 	}
 
 	@Override
 	public boolean shouldProcess(@NonNull IClassProcessor.Holder holder, @NonNull String className) {
-		return this.classNamePredicator == null || this.classNamePredicator.test(className);
+		return this.classNameFilter == null || this.classNameFilter.test(className);
 	}
 
 	@Override
