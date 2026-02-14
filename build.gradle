@@ -1,5 +1,6 @@
 plugins {
 	id 'java'
+	id 'maven-publish'
 }
 
 group = 'ru.xikki.libraries'
@@ -8,6 +9,24 @@ version = '1.0'
 repositories {
 	mavenLocal()
 	mavenCentral()
+}
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			from components.java
+		}
+	}
+	repositories {
+		maven {
+			name = 'xikki-repo'
+			url = 'https://repo.xikki.su/libraries'
+			credentials {
+				username = project.findProperty("username") ?: ""
+				password = project.findProperty("password") ?: ""
+			}
+		}
+	}
 }
 
 dependencies {
