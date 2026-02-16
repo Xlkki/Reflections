@@ -127,7 +127,7 @@ final class SimpleClassScanner implements IClassScanner {
 				ClassLoader.class,
 				MethodCondition.create()
 						.withName("defineClass1")
-						.withStatic(false)
+						.withStatic(true)
 						.withReturnType(Class.class)
 						.withParameters(
 								ClassLoader.class,
