@@ -16,7 +16,7 @@ public interface IClassScannerContext {
 	 *
 	 */
 	@NonNull
-	Map<String, List<Object>> getEntities();
+	Map<String, List<Object>> entities();
 
 	/**
 	 * Get entities by name
@@ -27,7 +27,7 @@ public interface IClassScannerContext {
 	 */
 	@NonNull
 	default List<Object> getEntities(@NonNull String name) {
-		return Collections.unmodifiableList(this.getEntities().getOrDefault(name, Collections.emptyList()));
+		return Collections.unmodifiableList(this.entities().getOrDefault(name, Collections.emptyList()));
 	}
 
 	/**
@@ -44,7 +44,7 @@ public interface IClassScannerContext {
 				.filter(type::isInstance)
 				.findFirst()
 				.orElseGet(() -> {
-					return this.getEntities().entrySet()
+					return type == Object.class ? null : this.entities().entrySet()
 							.stream()
 							.map(Map.Entry::getValue)
 							.flatMap(List::stream)
@@ -73,6 +73,17 @@ public interface IClassScannerContext {
 	@NonNull
 	default IClassScannerContext withClassNameFilter(@NonNull Predicate<String> classNameFilter) {
 		return this.withEntity("classNameFilter", classNameFilter);
+	}
+
+	/**
+	 * Add holder to context
+	 *
+	 * @param holder Holder object
+	 *
+	 */
+	@NonNull
+	default IClassScannerContext withHolder(@NonNull Object holder) {
+		return this.withEntity("holder", holder);
 	}
 
 	/**
