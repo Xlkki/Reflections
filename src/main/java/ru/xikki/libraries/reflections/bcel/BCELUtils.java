@@ -801,6 +801,17 @@ public final class BCELUtils {
 		return true;
 	}
 
+
+	/**
+	 * Inject internal instances field in BCEL class generator with default name
+	 *
+	 * @param classGenerator BCEL class generator
+	 * @return true if field is injected, otherwise - false
+	 */
+	public boolean injectInternalInstances(@NonNull ClassGen classGenerator) {
+		return BCELUtils.injectInternalInstances(classGenerator, ReflectionUtils.INTERNAL_INSTANCES_FIELD_NAME);
+	}
+
 	/**
 	 * Inject instructions list into the end of other instructions list
 	 *

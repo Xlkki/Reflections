@@ -36,7 +36,7 @@ public class ReflectionUtils {
 	private boolean defaultIncludeSuperClassFields = false;
 	private boolean defaultIncludeSuperClassMethods = false;
 
-	private final String INTERNAL_INSTANCES_FIELD_NAME = "$INTERNAL$INSTANCES";
+	public final String INTERNAL_INSTANCES_FIELD_NAME = "$INTERNAL$INSTANCES";
 
 	static {
 		try {
