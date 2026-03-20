@@ -105,7 +105,13 @@ public interface IClassScanner extends AutoCloseable, IClassModifier.Holder, ICl
 				)
 				.stream()
 				.map((javaClass) -> BCELUtils.getClass(loader, javaClass))
-				.map(context::createInstance)
+				.map((clazz) -> {
+					Object instance = context.createInstance(clazz);
+					if (instance == null) {
+						throw new IllegalArgumentException("Can not create instance of %s".formatted(clazz.getSimpleName()));
+					}
+					return instance;
+				})
 				.peek((instance) -> {
 					if (!(instance instanceof IClassModifier)) {
 						throw new IllegalStateException("Class %s should be implement %s interface".formatted(instance.getClass().getSimpleName(), IClassModifier.class.getSimpleName()));
@@ -152,7 +158,13 @@ public interface IClassScanner extends AutoCloseable, IClassModifier.Holder, ICl
 				)
 				.stream()
 				.map((javaClass) -> BCELUtils.getClass(loader, javaClass))
-				.map(context::createInstance)
+				.map((clazz) -> {
+					Object instance = context.createInstance(clazz);
+					if (instance == null) {
+						throw new IllegalArgumentException("Can not create instance of %s".formatted(clazz.getSimpleName()));
+					}
+					return instance;
+				})
 				.peek((instance) -> {
 					if (!(instance instanceof IClassProcessor)) {
 						throw new IllegalStateException("Class %s should be implement %s interface".formatted(instance.getClass().getSimpleName(), IClassProcessor.class.getSimpleName()));
