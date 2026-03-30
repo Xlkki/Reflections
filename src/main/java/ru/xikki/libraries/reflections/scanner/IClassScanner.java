@@ -53,10 +53,10 @@ public interface IClassScanner extends AutoCloseable, IClassModifier.Holder, ICl
 	 * @return List with matched classes (may be empty)
 	 */
 	@NonNull
-	default List<JavaClass> getClassesByCondition(@NonNull Predicate<String> nameCondition, @NonNull Predicate<JavaClass> classCondition) {
+	default List<JavaClass> getClassesByCondition(Predicate<String> nameCondition, @NonNull Predicate<JavaClass> classCondition) {
 		return this.getClassNames()
 				.stream()
-				.filter(nameCondition)
+				.filter((className) -> nameCondition == null || nameCondition.test(className))
 				.map(this::getClassByName)
 				.filter(Objects::nonNull)
 				.filter(classCondition)
@@ -71,7 +71,7 @@ public interface IClassScanner extends AutoCloseable, IClassModifier.Holder, ICl
 	 */
 	@NonNull
 	default List<JavaClass> getClassesByCondition(@NonNull Predicate<JavaClass> classCondition) {
-		return this.getClassesByCondition((__) -> true, classCondition);
+		return this.getClassesByCondition(null, classCondition);
 	}
 
 	/**
@@ -91,15 +91,14 @@ public interface IClassScanner extends AutoCloseable, IClassModifier.Holder, ICl
 	/**
 	 * Find and create instance of class modifiers
 	 *
-	 * @param context       Context for instance creating
-	 * @param loader        Class loader in which classes should be searched
-	 * @param nameCondition Condition for class name
+	 * @param context Context for instance creating
+	 * @param loader  Class loader in which classes should be searched
 	 * @return List with class modifiers (may be empty)
 	 */
 	@NonNull
-	default List<IClassModifier> findModifiers(@NonNull IClassScannerContext context, @NonNull ClassLoader loader, @NonNull Predicate<String> nameCondition) {
+	default List<IClassModifier> findModifiers(@NonNull IClassScannerContext context, @NonNull ClassLoader loader) {
 		return this.getClassesByCondition(
-						nameCondition, (javaClass) -> {
+						context.getClassNameFilter(), (javaClass) -> {
 							return BCELUtils.hasAnnotation(javaClass, ClassModifier.class);
 						}
 				)
@@ -122,30 +121,17 @@ public interface IClassScanner extends AutoCloseable, IClassModifier.Holder, ICl
 	}
 
 	/**
-	 * Find and create instance of class modifiers
-	 *
-	 * @param context Context for instance creating
-	 * @param loader  Class loader in which classes should be searched
-	 * @return List with class modifiers (may be empty)
-	 */
-	@NonNull
-	default List<IClassModifier> findModifiers(@NonNull IClassScannerContext context, @NonNull ClassLoader loader) {
-		return this.findModifiers(context, loader, (__) -> true);
-	}
-
-	/**
 	 * Find and create instance of class processors
 	 *
-	 * @param context       Context for instance creating
-	 * @param order         Class processor applying order
-	 * @param loader        Class loader in which classes should be searched
-	 * @param nameCondition Condition for class name
+	 * @param context Context for instance creating
+	 * @param order   Class processor applying order
+	 * @param loader  Class loader in which classes should be searched
 	 * @return List with class processors (may be empty)
 	 */
 	@NonNull
-	default List<IClassProcessor> findProcessors(@NonNull IClassScannerContext context, @NonNull ProcessorOrder order, @NonNull ClassLoader loader, @NonNull Predicate<String> nameCondition) {
+	default List<IClassProcessor> findProcessors(@NonNull IClassScannerContext context, @NonNull ProcessorOrder order, @NonNull ClassLoader loader) {
 		return this.getClassesByCondition(
-						nameCondition, (javaClass) -> {
+						context.getClassNameFilter(), (javaClass) -> {
 							if (!BCELUtils.hasAnnotation(javaClass, ClassProcessor.class)) {
 								return false;
 							}
@@ -172,19 +158,6 @@ public interface IClassScanner extends AutoCloseable, IClassModifier.Holder, ICl
 				})
 				.map(IClassProcessor.class::cast)
 				.toList();
-	}
-
-	/**
-	 * Find and create instance of class processors
-	 *
-	 * @param context Context for instance creating
-	 * @param order   Class processor applying order
-	 * @param loader  Class loader in which classes should be searched
-	 * @return List with class processors (may be empty)
-	 */
-	@NonNull
-	default List<IClassProcessor> findProcessors(@NonNull IClassScannerContext context, @NonNull ProcessorOrder order, @NonNull ClassLoader loader) {
-		return this.findProcessors(context, order, loader, (__) -> true);
 	}
 
 	/**

@@ -4,7 +4,9 @@ import lombok.NonNull;
 
 import java.util.*;
 
-record SimpleClassScannerContext(Map<String, List<Object>> entities) implements IClassScannerContext {
+final class SimpleClassScannerContext implements IClassScannerContext {
+
+	private final Map<String, List<Object>> entities;
 
 	SimpleClassScannerContext(@NonNull Map<String, List<Object>> entities) {
 		this.entities = new HashMap<>(entities);
@@ -12,7 +14,7 @@ record SimpleClassScannerContext(Map<String, List<Object>> entities) implements 
 
 	@NonNull
 	@Override
-	public Map<String, List<Object>> entities() {
+	public Map<String, List<Object>> getEntities() {
 		return Collections.unmodifiableMap(this.entities);
 	}
 

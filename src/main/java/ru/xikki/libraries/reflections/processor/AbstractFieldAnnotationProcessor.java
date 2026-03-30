@@ -34,29 +34,4 @@ public abstract class AbstractFieldAnnotationProcessor implements IClassProcesso
 		return BCELUtils.hasAnnotatedField(javaClass, this.fieldAnnotationSignature);
 	}
 
-	@Override
-	public boolean shouldLoadClass(@NonNull IClassProcessor.Holder holder, @NonNull JavaClass javaClass) {
-		return true;
-	}
-
-	@Override
-	public boolean shouldCreateInstance(@NonNull IClassProcessor.Holder holder, @NonNull JavaClass javaClass) {
-		return BCELUtils.hasAnnotatedNonStaticField(javaClass, this.fieldAnnotationSignature);
-	}
-
-	@Override
-	public void processInstance(@NonNull IClassProcessor.Holder holder, @NonNull Object instance) {
-
-	}
-
-	@Override
-	public void processClass(@NonNull IClassProcessor.Holder holder, @NonNull Class<?> clazz) {
-
-	}
-
-	@Override
-	public void processClass(@NonNull IClassProcessor.Holder holder, @NonNull JavaClass javaClass) {
-
-	}
-
 }

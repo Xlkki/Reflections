@@ -11,12 +11,15 @@ import java.util.function.Predicate;
 
 public interface IClassScannerContext {
 
+	String CLASS_NAME_FILTER_ENTITY_NAME = "classNameFilter";
+	String HOLDER_ENTITY_NAME = "holder";
+
 	/**
 	 * Get entities of class scanner context as map
 	 *
 	 */
 	@NonNull
-	Map<String, List<Object>> entities();
+	Map<String, List<Object>> getEntities();
 
 	/**
 	 * Get entities by name
@@ -27,7 +30,7 @@ public interface IClassScannerContext {
 	 */
 	@NonNull
 	default List<Object> getEntities(@NonNull String name) {
-		return Collections.unmodifiableList(this.entities().getOrDefault(name, Collections.emptyList()));
+		return Collections.unmodifiableList(this.getEntities().getOrDefault(name, Collections.emptyList()));
 	}
 
 	/**
@@ -44,7 +47,7 @@ public interface IClassScannerContext {
 				.filter(type::isInstance)
 				.findFirst()
 				.orElseGet(() -> {
-					return type == Object.class ? null : this.entities().entrySet()
+					return type == Object.class ? null : this.getEntities().entrySet()
 							.stream()
 							.map(Map.Entry::getValue)
 							.flatMap(List::stream)
@@ -52,6 +55,15 @@ public interface IClassScannerContext {
 							.findFirst()
 							.orElse(null);
 				});
+	}
+
+	default Predicate<String> getClassNameFilter() {
+		return this.getEntities(CLASS_NAME_FILTER_ENTITY_NAME)
+				.stream()
+				.filter(Predicate.class::isInstance)
+				.findFirst()
+				.map(Predicate.class::cast)
+				.orElse(null);
 	}
 
 	/**
@@ -72,7 +84,7 @@ public interface IClassScannerContext {
 	 */
 	@NonNull
 	default IClassScannerContext withClassNameFilter(@NonNull Predicate<String> classNameFilter) {
-		return this.withEntity("classNameFilter", classNameFilter);
+		return this.withEntity(CLASS_NAME_FILTER_ENTITY_NAME, classNameFilter);
 	}
 
 	/**
@@ -83,7 +95,7 @@ public interface IClassScannerContext {
 	 */
 	@NonNull
 	default IClassScannerContext withHolder(@NonNull Object holder) {
-		return this.withEntity("holder", holder);
+		return this.withEntity(HOLDER_ENTITY_NAME, holder);
 	}
 
 	/**

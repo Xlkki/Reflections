@@ -1,4 +1,4 @@
-package ru.xikki.libraries.reflections.processor;
+package ru.xikki.libraries.reflections.modifier;
 
 import lombok.NonNull;
 import org.apache.bcel.classfile.JavaClass;
@@ -7,25 +7,25 @@ import ru.xikki.libraries.reflections.bcel.BCELUtils;
 import java.lang.annotation.Annotation;
 import java.util.function.Predicate;
 
-public abstract class AbstractMethodAnnotationProcessor implements IClassProcessor {
+public abstract class AbstractMethodAnnotationModifier implements IClassModifier {
 
 	private final Predicate<String> classNameFilter;
 	private final String expectedClassAnnotationSignature;
 	private final String methodAnnotationSignature;
 
-	protected AbstractMethodAnnotationProcessor(Predicate<String> classNameFilter, Class<? extends Annotation> expectedClassAnnotation, @NonNull Class<? extends Annotation> methodAnnotation) {
+	protected AbstractMethodAnnotationModifier(Predicate<String> classNameFilter, Class<? extends Annotation> expectedClassAnnotation, @NonNull Class<? extends Annotation> methodAnnotation) {
 		this.classNameFilter = classNameFilter;
 		this.expectedClassAnnotationSignature = expectedClassAnnotation == null ? null : BCELUtils.getAnnotationSignature(expectedClassAnnotation);
 		this.methodAnnotationSignature = BCELUtils.getAnnotationSignature(methodAnnotation);
 	}
 
 	@Override
-	public boolean shouldProcess(@NonNull IClassProcessor.Holder holder, @NonNull String className) {
+	public boolean shouldModify(@NonNull IClassModifier.Holder holder, @NonNull String className) {
 		return this.classNameFilter == null || this.classNameFilter.test(className);
 	}
 
 	@Override
-	public boolean shouldProcess(@NonNull IClassProcessor.Holder holder, @NonNull JavaClass javaClass) {
+	public boolean shouldModify(@NonNull IClassModifier.Holder holder, @NonNull JavaClass javaClass) {
 		if (this.expectedClassAnnotationSignature != null) {
 			if (BCELUtils.hasAnnotation(javaClass, this.expectedClassAnnotationSignature)) {
 				return false;

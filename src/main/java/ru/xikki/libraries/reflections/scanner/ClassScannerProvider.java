@@ -18,7 +18,7 @@ public final class ClassScannerProvider {
 	@Getter
 	@Setter
 	@NonNull
-	static IClassScanner.Factory scannerFactory = SimpleClassScanner::new;
+	static IClassScanner.Factory factory = SimpleClassScanner::new;
 
 	/**
 	 * Get all registered class scanners
@@ -46,6 +46,6 @@ public final class ClassScannerProvider {
 	 */
 	@NonNull
 	public static IClassScanner getOrCreateScanner(@NonNull Path path) {
-		return SCANNERS.computeIfAbsent(path, (__) -> scannerFactory.create(path));
+		return SCANNERS.computeIfAbsent(path, (__) -> factory.create(path));
 	}
 }
