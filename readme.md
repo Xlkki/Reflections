@@ -82,6 +82,7 @@ Class<?> clazz = ...;
 IClassScanner scanner = IClassScanner.of(clazz);
 ```
 **ВАЖНО:** В таком случае возьмется исходный файл/директория переданного класса
+
 3) Из текущего класса:
 ```Java
 IClassScanner scanner = IClassScanner.of(); 
