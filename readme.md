@@ -313,6 +313,16 @@ scanner.registerModifier(modifier);
 ```
 2) При помощи аннотации `@ClassModifier`:
 ```Java
+@ClassModifier
+final class MyModifier implements IClassModifier {
+	
+	/**
+	 * ...
+	 * */
+	
+}
+```
+```Java
 IClassScanner scanner = ...;
 IClassScannerContext context = ...;
 ClassLoader loader = ...;
