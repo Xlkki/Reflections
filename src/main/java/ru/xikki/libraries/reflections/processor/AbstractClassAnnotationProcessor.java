@@ -9,8 +9,8 @@ import java.util.function.Predicate;
 
 public abstract class AbstractClassAnnotationProcessor implements IClassProcessor {
 
-	private final Predicate<String> classNameFilter;
-	private final String classAnnotationSignature;
+	protected final Predicate<String> classNameFilter;
+	protected final String classAnnotationSignature;
 
 	protected AbstractClassAnnotationProcessor(Predicate<String> classNameFilter, @NonNull Class<? extends Annotation> classAnnotation) {
 		this.classNameFilter = classNameFilter;

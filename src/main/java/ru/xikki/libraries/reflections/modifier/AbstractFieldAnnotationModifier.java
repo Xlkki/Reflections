@@ -9,9 +9,9 @@ import java.util.function.Predicate;
 
 public abstract class AbstractFieldAnnotationModifier implements IClassModifier {
 
-	private final Predicate<String> classNameFilter;
-	private final String expectedClassAnnotationSignature;
-	private final String fieldAnnotationSignature;
+	protected final Predicate<String> classNameFilter;
+	protected final String expectedClassAnnotationSignature;
+	protected final String fieldAnnotationSignature;
 
 	protected AbstractFieldAnnotationModifier(Predicate<String> classNameFilter, Class<? extends Annotation> expectedClassAnnotation, @NonNull Class<? extends Annotation> fieldAnnotation) {
 		this.classNameFilter = classNameFilter;
