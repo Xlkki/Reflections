@@ -229,12 +229,12 @@ public interface IClassScanner extends AutoCloseable, IClassModifier.Holder, ICl
 			}
 			appliedProcessors.forEach((processor) -> processor.processClass(this, javaClass));
 			Set<IClassProcessor> loadedClassProcessors = appliedProcessors.stream()
-					.filter((processor) -> processor.shouldLoadClass(this, javaClass))
+					.filter((processor) -> processor.shouldLoadClass(this, javaClass) || processor.shouldCreateInstance(this, javaClass))
 					.collect(Collectors.toUnmodifiableSet());
 			Set<IClassProcessor> instanceProcessors = appliedProcessors.stream()
 					.filter((processor) -> processor.shouldCreateInstance(this, javaClass))
 					.collect(Collectors.toUnmodifiableSet());
-			if (!loadedClassProcessors.isEmpty() || !instanceProcessors.isEmpty()) {
+			if (!loadedClassProcessors.isEmpty()) {
 				Class<?> clazz = BCELUtils.getClass(loader, javaClass);
 				try {
 					loadedClassProcessors.forEach((processor) -> processor.processClass(this, clazz));

@@ -1397,7 +1397,8 @@ public class ReflectionUtils {
 			throw new IllegalArgumentException("File name %s is not a class file name".formatted(fileName));
 		}
 		fileName = fileName.substring(0, fileName.lastIndexOf('.'));
-		return fileName.replace('/', '.');
+		return fileName.replace('/', '.')
+				.replace('\\', '.');
 	}
 
 	/**
