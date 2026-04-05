@@ -57,6 +57,12 @@ public interface IClassScannerContext {
 				});
 	}
 
+	/**
+	 * Get class name filter
+	 *
+	 * @return Class name filter or null
+	 *
+	 */
 	default Predicate<String> getClassNameFilter() {
 		return this.getEntities(CLASS_NAME_FILTER_ENTITY_NAME)
 				.stream()

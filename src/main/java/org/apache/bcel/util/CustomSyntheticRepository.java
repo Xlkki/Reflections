@@ -1,6 +1,9 @@
 package org.apache.bcel.util;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NonNull;
+import lombok.ToString;
 import org.apache.bcel.classfile.JavaClass;
 
 import java.util.Collections;
@@ -12,6 +15,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * Custom synthetic repository, that contains loaded classes into map without soft-referencing
  *
  */
+@Getter
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
 public final class CustomSyntheticRepository extends AbstractClassPathRepository {
 
 	private static final Map<ClassPath, CustomSyntheticRepository> MAP = new ConcurrentHashMap<>();
