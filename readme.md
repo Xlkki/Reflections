@@ -7,6 +7,46 @@
 - BCEL (версия `6.11.0` или выше)
 - ASM (версия `9.9.1` или выше)
 
+## Import
+### Gradle:
+```gradle
+repositories {
+	//...
+	maven {
+		name = 'xikki-repo'
+		url = 'https://repo.xikki.su/libraries'
+	}
+}
+
+dependencies {
+	//...
+	implementation 'ru.xikki.libraries:Reflections:1.1'
+}
+```
+
+### Maven
+```xml
+<project>
+	<repositories>
+		<!-- ... -->
+		<repository>
+			<id>xikki-repo</id>
+			<url>https://repo.xikki.su/libraries</url>
+		</repository>
+	</repositories>
+
+	<dependencies>
+		<!-- ... -->
+		<dependency>
+			<groupId>ru.xikki.libraries</groupId>
+			<artifactId>Reflections</artifactId>
+			<version>1.1</version>
+		</dependency>
+	</dependencies>
+
+</project>
+```
+
 ## ReflectionUtils
 
 `ReflectionUtils` - это класс с различным набором утилитарных методов
